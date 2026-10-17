@@ -6,8 +6,8 @@ Status: not implemented. This checklist follows PRD sections 46 and 48-49.
 - [x] Add Python packaging, Ruff, mypy, pytest configuration, and CI definition.
 - [x] Complete targeted Gate 0 check; proceed only with the bounded spike.
 - [ ] Implement Payment and Shipping mock APIs.
-- [ ] Implement PostgreSQL effect ledger and migrations.
-- [ ] Define EffectIntent and the certainty-state model.
+- [x] Implement PostgreSQL effect ledger, checksum migration, and append-only events.
+- [x] Define EffectIntent and the certainty-state model; verify persistence and transitions.
 - [ ] Add deterministic timeout-after-effect injection.
 - [ ] Implement naive and resource OCC baselines.
 - [ ] Implement shipment_requires_confirmed_payment.

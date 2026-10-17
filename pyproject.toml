@@ -36,7 +36,7 @@ include = ["agenttxn*", "txnagentbench*", "services*", "baselines*", "experiment
 exclude = ["tests*"]
 
 [tool.setuptools.package-data]
-agenttxn = ["py.typed"]
+agenttxn = ["py.typed", "effects/migrations/*.sql"]
 
 [tool.ruff]
 target-version = "py311"
