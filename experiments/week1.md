@@ -4,7 +4,7 @@ Status: not implemented. This checklist follows PRD sections 46 and 48-49.
 
 - [x] Create repository directories and module placeholders.
 - [x] Add Python packaging, Ruff, mypy, pytest configuration, and CI definition.
-- [ ] Complete Gate 0 novelty check.
+- [x] Complete targeted Gate 0 check; proceed only with the bounded spike.
 - [ ] Implement Payment and Shipping mock APIs.
 - [ ] Implement PostgreSQL effect ledger and migrations.
 - [ ] Define EffectIntent and the certainty-state model.

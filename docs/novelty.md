@@ -1,16 +1,21 @@
 # Gate 0: novelty check
 
-Status: pending. Repository scaffolding does not constitute a novelty claim.
+Decision, 16 October 2026: proceed with the bounded feasibility experiment only.
+The targeted search did not verify a single system demonstrating all nine PRD
+capabilities. It did find substantial overlap and does not establish novelty.
+Evidence and primary sources are recorded in [literature.md](literature.md).
 
-Search for semantic concurrency in LLM agents, cross-service agent invariants,
-uncertain effect concurrency, semantic serializability, in-doubt transactions
-for LLMs, and concurrent external side effects.
+The strongest risks are Atomix's semantic hook, SVBE's effect-time validation,
+Limbo's ambiguous outcomes and capability-dependent recovery, and Authority at
+Commit Time's semantic verification plus receipt reconciliation.
 
-Compare candidate work against all nine PRD capabilities: concurrent agents,
-heterogeneous services, disjoint-resource invariants, UNKNOWN effects, online
-certification, dynamic activity, ambiguous/delayed faults, a concurrency
-benchmark, and correctness-versus-parallelism evaluation.
+Before interpreting the disjoint-resource result, include an augmented resource
+OCC control that declares incident:<id>:budget as a shared conflict key. A budget
+counterexample can be encoded as an ordinary shared lock or synthetic resource.
+If that control matches AgentTxn, the original stronger research claim does not
+pass Gate 1; record REDESIGN rather than asserting novelty from a weak baseline.
 
-Record sources in [literature.md](literature.md). Stop or redesign if prior work
-already demonstrates nearly the full combination. Record the dated decision
-and evidence here before implementing the runtime.
+The feasibility implementation is authorized to collect this evidence. Do not
+advance to the full build or LLM integration unless the gate verdict supports it.
+Full-text SVBE comparison and deeper adjacent-system review remain open research
+tasks before a publication claim.
