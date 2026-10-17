@@ -1,0 +1,3175 @@
+{
+  "benchmark_version": "gate1b-v1",
+  "seed": 42,
+  "ledger": "postgres",
+  "python": "3.11.17",
+  "source_commit": "unavailable",
+  "source_dirty": null,
+  "source_tree_sha256": "8df55f89fba0a2337110219ec00abe80957ec90fec191d07bb994d7de6a64ba5",
+  "lockfile_sha256": "e64ecf3c1ed01d9418f68bc3af09489af3aaec4174bf61741f1add6e53fd9539",
+  "input_document_sha256_lf": {
+    "AgentTxn_Redesign_Deep_Dive.md": "711f2595a6f51170d7833b956e372e1919a9d081004c080b0f17c820105349ab",
+    "experiments/week1.md": "0e270f0525e4dfa690b620bbc1de58b0ba01ce6c6ec55ca10f1cf8ba25330231",
+    "AgentTxn_PRD.md": "6b8fe8ff10d0b2ce5f0b732c37f20035a0c920ce9262e21e972ad32ba8df31b7",
+    "experiments/gate1b_protocol.md": "29015038705a0288e18275fef7206ac11481b80ebcfc4cf487c0798a47c2757b"
+  },
+  "determinism_scope": "Frozen evidence rounds, seeded admission order; commuting PostgreSQL events may interleave",
+  "scenarios": [
+    {
+      "scenario_id": "payment_fanout",
+      "upstream": {
+        "effect_id": "upstream",
+        "logical_operation_id": "upstream",
+        "transaction_id": "txn:upstream",
+        "agent_id": "agent:upstream",
+        "workflow_id": "workflow:upstream",
+        "operation": "charge",
+        "order_id": "order-1",
+        "incident_id": "incident-1",
+        "amount_cents": 10000,
+        "resource_footprint": [
+          "order:order-1"
+        ],
+        "semantic_tags": [
+          "order:order-1"
+        ],
+        "dependencies": [],
+        "read_versions": {},
+        "action_name": null
+      },
+      "upstream_contract": {
+        "operation": "charge",
+        "idempotency_supported": true,
+        "reconciliation_supported": true,
+        "definitive_absence": true,
+        "irreversible": false,
+        "compensation_supported": false,
+        "compensation_operation": null,
+        "quiescence_certificate_supported": true
+      },
+      "worlds": [
+        {
+          "outcome": "COMMITTED",
+          "facts": [
+            {
+              "name": "captured",
+              "value": true
+            },
+            {
+              "name": "in_flight",
+              "value": false
+            },
+            {
+              "name": "export_authorized",
+              "value": false
+            },
+            {
+              "name": "packaging_available",
+              "value": true
+            },
+            {
+              "name": "unauthorized_export",
+              "value": false
+            },
+            {
+              "name": "support_note",
+              "value": false
+            },
+            {
+              "name": "marketing_preference",
+              "value": false
+            },
+            {
+              "name": "reserve_packaging",
+              "value": false
+            },
+            {
+              "name": "ship_order",
+              "value": false
+            },
+            {
+              "name": "payment_confirmation",
+              "value": false
+            },
+            {
+              "name": "alternate_payment",
+              "value": false
+            },
+            {
+              "name": "seal_payment_attempt",
+              "value": false
+            }
+          ]
+        },
+        {
+          "outcome": "ABSENT",
+          "facts": [
+            {
+              "name": "captured",
+              "value": false
+            },
+            {
+              "name": "in_flight",
+              "value": false
+            },
+            {
+              "name": "export_authorized",
+              "value": false
+            },
+            {
+              "name": "packaging_available",
+              "value": true
+            },
+            {
+              "name": "unauthorized_export",
+              "value": false
+            },
+            {
+              "name": "support_note",
+              "value": false
+            },
+            {
+              "name": "marketing_preference",
+              "value": false
+            },
+            {
+              "name": "reserve_packaging",
+              "value": false
+            },
+            {
+              "name": "ship_order",
+              "value": false
+            },
+            {
+              "name": "payment_confirmation",
+              "value": false
+            },
+            {
+              "name": "alternate_payment",
+              "value": false
+            },
+            {
+              "name": "seal_payment_attempt",
+              "value": false
+            }
+          ]
+        },
+        {
+          "outcome": "IN_FLIGHT",
+          "facts": [
+            {
+              "name": "captured",
+              "value": false
+            },
+            {
+              "name": "in_flight",
+              "value": true
+            },
+            {
+              "name": "export_authorized",
+              "value": false
+            },
+            {
+              "name": "packaging_available",
+              "value": true
+            },
+            {
+              "name": "unauthorized_export",
+              "value": false
+            },
+            {
+              "name": "support_note",
+              "value": false
+            },
+            {
+              "name": "marketing_preference",
+              "value": false
+            },
+            {
+              "name": "reserve_packaging",
+              "value": false
+            },
+            {
+              "name": "ship_order",
+              "value": false
+            },
+            {
+              "name": "payment_confirmation",
+              "value": false
+            },
+            {
+              "name": "alternate_payment",
+              "value": false
+            },
+            {
+              "name": "seal_payment_attempt",
+              "value": false
+            }
+          ]
+        }
+      ],
+      "invariants": [
+        {
+          "invariant_id": "export_authorized",
+          "predicate": {
+            "kind": "implies",
+            "field": "",
+            "value": true,
+            "children": [
+              {
+                "kind": "fact",
+                "field": "unauthorized_export",
+                "value": true,
+                "children": []
+              },
+              {
+                "kind": "fact",
+                "field": "export_authorized",
+                "value": true,
+                "children": []
+              }
+            ]
+          }
+        },
+        {
+          "invariant_id": "shipment_requires_settled_payment",
+          "predicate": {
+            "kind": "implies",
+            "field": "",
+            "value": true,
+            "children": [
+              {
+                "kind": "fact",
+                "field": "ship_order",
+                "value": true,
+                "children": []
+              },
+              {
+                "kind": "and",
+                "field": "",
+                "value": true,
+                "children": [
+                  {
+                    "kind": "fact",
+                    "field": "captured",
+                    "value": true,
+                    "children": []
+                  },
+                  {
+                    "kind": "fact",
+                    "field": "in_flight",
+                    "value": false,
+                    "children": []
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "invariant_id": "confirmation_requires_settled_payment",
+          "predicate": {
+            "kind": "implies",
+            "field": "",
+            "value": true,
+            "children": [
+              {
+                "kind": "fact",
+                "field": "payment_confirmation",
+                "value": true,
+                "children": []
+              },
+              {
+                "kind": "and",
+                "field": "",
+                "value": true,
+                "children": [
+                  {
+                    "kind": "fact",
+                    "field": "captured",
+                    "value": true,
+                    "children": []
+                  },
+                  {
+                    "kind": "fact",
+                    "field": "in_flight",
+                    "value": false,
+                    "children": []
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "invariant_id": "no_second_payment_or_late_duplicate",
+          "predicate": {
+            "kind": "implies",
+            "field": "",
+            "value": true,
+            "children": [
+              {
+                "kind": "fact",
+                "field": "alternate_payment",
+                "value": true,
+                "children": []
+              },
+              {
+                "kind": "and",
+                "field": "",
+                "value": true,
+                "children": [
+                  {
+                    "kind": "fact",
+                    "field": "captured",
+                    "value": false,
+                    "children": []
+                  },
+                  {
+                    "kind": "fact",
+                    "field": "in_flight",
+                    "value": false,
+                    "children": []
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "invariant_id": "sealed_attempt_cannot_receive_late_write",
+          "predicate": {
+            "kind": "implies",
+            "field": "",
+            "value": true,
+            "children": [
+              {
+                "kind": "fact",
+                "field": "seal_payment_attempt",
+                "value": true,
+                "children": []
+              },
+              {
+                "kind": "fact",
+                "field": "in_flight",
+                "value": false,
+                "children": []
+              }
+            ]
+          }
+        },
+        {
+          "invariant_id": "packaging_capacity",
+          "predicate": {
+            "kind": "implies",
+            "field": "",
+            "value": true,
+            "children": [
+              {
+                "kind": "fact",
+                "field": "reserve_packaging",
+                "value": true,
+                "children": []
+              },
+              {
+                "kind": "fact",
+                "field": "packaging_available",
+                "value": true,
+                "children": []
+              }
+            ]
+          }
+        }
+      ],
+      "candidates": [
+        {
+          "intent": {
+            "effect_id": "unauthorized_export",
+            "logical_operation_id": "candidate:unauthorized_export",
+            "transaction_id": "txn:unauthorized_export",
+            "agent_id": "agent:unauthorized_export",
+            "workflow_id": "workflow:unauthorized_export",
+            "operation": "candidate",
+            "order_id": "order-1",
+            "incident_id": null,
+            "amount_cents": 0,
+            "resource_footprint": [
+              "action:unauthorized_export"
+            ],
+            "semantic_tags": [
+              "order:order-1"
+            ],
+            "dependencies": [],
+            "read_versions": {},
+            "action_name": "unauthorized_export"
+          },
+          "writes": [
+            {
+              "name": "unauthorized_export",
+              "value": true
+            }
+          ],
+          "reads": [
+            "export_authorized"
+          ],
+          "coarse_context": "order:order-1",
+          "contract": {
+            "operation": "candidate",
+            "idempotency_supported": true,
+            "reconciliation_supported": true,
+            "definitive_absence": true,
+            "irreversible": true,
+            "compensation_supported": false,
+            "compensation_operation": null,
+            "quiescence_certificate_supported": false
+          }
+        },
+        {
+          "intent": {
+            "effect_id": "support_note",
+            "logical_operation_id": "candidate:support_note",
+            "transaction_id": "txn:support_note",
+            "agent_id": "agent:support_note",
+            "workflow_id": "workflow:support_note",
+            "operation": "candidate",
+            "order_id": "order-1",
+            "incident_id": null,
+            "amount_cents": 0,
+            "resource_footprint": [
+              "action:support_note"
+            ],
+            "semantic_tags": [
+              "order:order-1"
+            ],
+            "dependencies": [],
+            "read_versions": {},
+            "action_name": "support_note"
+          },
+          "writes": [
+            {
+              "name": "support_note",
+              "value": true
+            }
+          ],
+          "reads": [],
+          "coarse_context": "order:order-1",
+          "contract": {
+            "operation": "candidate",
+            "idempotency_supported": true,
+            "reconciliation_supported": true,
+            "definitive_absence": true,
+            "irreversible": false,
+            "compensation_supported": false,
+            "compensation_operation": null,
+            "quiescence_certificate_supported": false
+          }
+        },
+        {
+          "intent": {
+            "effect_id": "marketing_preference",
+            "logical_operation_id": "candidate:marketing_preference",
+            "transaction_id": "txn:marketing_preference",
+            "agent_id": "agent:marketing_preference",
+            "workflow_id": "workflow:marketing_preference",
+            "operation": "candidate",
+            "order_id": "order-1",
+            "incident_id": null,
+            "amount_cents": 0,
+            "resource_footprint": [
+              "action:marketing_preference"
+            ],
+            "semantic_tags": [
+              "customer:customer-1"
+            ],
+            "dependencies": [],
+            "read_versions": {},
+            "action_name": "marketing_preference"
+          },
+          "writes": [
+            {
+              "name": "marketing_preference",
+              "value": true
+            }
+          ],
+          "reads": [],
+          "coarse_context": "customer:customer-1",
+          "contract": {
+            "operation": "candidate",
+            "idempotency_supported": true,
+            "reconciliation_supported": true,
+            "definitive_absence": true,
+            "irreversible": false,
+            "compensation_supported": false,
+            "compensation_operation": null,
+            "quiescence_certificate_supported": false
+          }
+        },
+        {
+          "intent": {
+            "effect_id": "reserve_packaging",
+            "logical_operation_id": "candidate:reserve_packaging",
+            "transaction_id": "txn:reserve_packaging",
+            "agent_id": "agent:reserve_packaging",
+            "workflow_id": "workflow:reserve_packaging",
+            "operation": "candidate",
+            "order_id": "order-1",
+            "incident_id": null,
+            "amount_cents": 0,
+            "resource_footprint": [
+              "action:reserve_packaging"
+            ],
+            "semantic_tags": [
+              "order:order-1"
+            ],
+            "dependencies": [],
+            "read_versions": {},
+            "action_name": "reserve_packaging"
+          },
+          "writes": [
+            {
+              "name": "reserve_packaging",
+              "value": true
+            }
+          ],
+          "reads": [
+            "packaging_available"
+          ],
+          "coarse_context": "order:order-1",
+          "contract": {
+            "operation": "candidate",
+            "idempotency_supported": true,
+            "reconciliation_supported": true,
+            "definitive_absence": true,
+            "irreversible": false,
+            "compensation_supported": false,
+            "compensation_operation": null,
+            "quiescence_certificate_supported": false
+          }
+        },
+        {
+          "intent": {
+            "effect_id": "ship_order",
+            "logical_operation_id": "candidate:ship_order",
+            "transaction_id": "txn:ship_order",
+            "agent_id": "agent:ship_order",
+            "workflow_id": "workflow:ship_order",
+            "operation": "candidate",
+            "order_id": "order-1",
+            "incident_id": null,
+            "amount_cents": 0,
+            "resource_footprint": [
+              "action:ship_order"
+            ],
+            "semantic_tags": [
+              "order:order-1"
+            ],
+            "dependencies": [
+              "upstream"
+            ],
+            "read_versions": {},
+            "action_name": "ship_order"
+          },
+          "writes": [
+            {
+              "name": "ship_order",
+              "value": true
+            }
+          ],
+          "reads": [
+            "captured",
+            "in_flight"
+          ],
+          "coarse_context": "order:order-1",
+          "contract": {
+            "operation": "candidate",
+            "idempotency_supported": true,
+            "reconciliation_supported": true,
+            "definitive_absence": true,
+            "irreversible": true,
+            "compensation_supported": false,
+            "compensation_operation": null,
+            "quiescence_certificate_supported": false
+          }
+        },
+        {
+          "intent": {
+            "effect_id": "payment_confirmation",
+            "logical_operation_id": "candidate:payment_confirmation",
+            "transaction_id": "txn:payment_confirmation",
+            "agent_id": "agent:payment_confirmation",
+            "workflow_id": "workflow:payment_confirmation",
+            "operation": "candidate",
+            "order_id": "order-1",
+            "incident_id": null,
+            "amount_cents": 0,
+            "resource_footprint": [
+              "action:payment_confirmation"
+            ],
+            "semantic_tags": [
+              "order:order-1"
+            ],
+            "dependencies": [
+              "upstream"
+            ],
+            "read_versions": {},
+            "action_name": "payment_confirmation"
+          },
+          "writes": [
+            {
+              "name": "payment_confirmation",
+              "value": true
+            }
+          ],
+          "reads": [
+            "captured",
+            "in_flight"
+          ],
+          "coarse_context": "order:order-1",
+          "contract": {
+            "operation": "candidate",
+            "idempotency_supported": true,
+            "reconciliation_supported": true,
+            "definitive_absence": true,
+            "irreversible": true,
+            "compensation_supported": false,
+            "compensation_operation": null,
+            "quiescence_certificate_supported": false
+          }
+        },
+        {
+          "intent": {
+            "effect_id": "alternate_payment",
+            "logical_operation_id": "candidate:alternate_payment",
+            "transaction_id": "txn:alternate_payment",
+            "agent_id": "agent:alternate_payment",
+            "workflow_id": "workflow:alternate_payment",
+            "operation": "candidate",
+            "order_id": "order-1",
+            "incident_id": null,
+            "amount_cents": 10000,
+            "resource_footprint": [
+              "action:alternate_payment"
+            ],
+            "semantic_tags": [
+              "order:order-1"
+            ],
+            "dependencies": [
+              "upstream"
+            ],
+            "read_versions": {},
+            "action_name": "alternate_payment"
+          },
+          "writes": [
+            {
+              "name": "alternate_payment",
+              "value": true
+            }
+          ],
+          "reads": [
+            "captured",
+            "in_flight"
+          ],
+          "coarse_context": "order:order-1",
+          "contract": {
+            "operation": "candidate",
+            "idempotency_supported": true,
+            "reconciliation_supported": true,
+            "definitive_absence": true,
+            "irreversible": true,
+            "compensation_supported": false,
+            "compensation_operation": null,
+            "quiescence_certificate_supported": false
+          }
+        },
+        {
+          "intent": {
+            "effect_id": "seal_payment_attempt",
+            "logical_operation_id": "candidate:seal_payment_attempt",
+            "transaction_id": "txn:seal_payment_attempt",
+            "agent_id": "agent:seal_payment_attempt",
+            "workflow_id": "workflow:seal_payment_attempt",
+            "operation": "candidate",
+            "order_id": "order-1",
+            "incident_id": null,
+            "amount_cents": 0,
+            "resource_footprint": [
+              "action:seal_payment_attempt"
+            ],
+            "semantic_tags": [
+              "order:order-1"
+            ],
+            "dependencies": [
+              "upstream"
+            ],
+            "read_versions": {},
+            "action_name": "seal_payment_attempt"
+          },
+          "writes": [
+            {
+              "name": "seal_payment_attempt",
+              "value": true
+            }
+          ],
+          "reads": [
+            "in_flight"
+          ],
+          "coarse_context": "order:order-1",
+          "contract": {
+            "operation": "candidate",
+            "idempotency_supported": true,
+            "reconciliation_supported": true,
+            "definitive_absence": true,
+            "irreversible": false,
+            "compensation_supported": false,
+            "compensation_operation": null,
+            "quiescence_certificate_supported": false
+          }
+        }
+      ],
+      "fault_schedule": [
+        "round0: ambiguous timeout; request may have committed, be absent, or remain in flight",
+        "round1: opaque receipt lookup; no outcome eliminated",
+        "round2: authoritative quiescence certificate; no request remains in flight",
+        "round3: authoritative committed or terminal-abort receipt"
+      ],
+      "reconciliation_endpoint": "/operations/upstream",
+      "causal_contract": "IN_FLIGHT can later COMMIT or become definitively ABSENT; no bound assumed",
+      "version": "gate1b-v1"
+    },
+    {
+      "scenario_id": "refund_cross_workflow",
+      "upstream": {
+        "effect_id": "upstream",
+        "logical_operation_id": "upstream",
+        "transaction_id": "txn:upstream",
+        "agent_id": "agent:upstream",
+        "workflow_id": "workflow:upstream",
+        "operation": "refund",
+        "order_id": "order-1",
+        "incident_id": "incident-1",
+        "amount_cents": 30000,
+        "resource_footprint": [
+          "customer:customer-1"
+        ],
+        "semantic_tags": [
+          "customer:customer-1"
+        ],
+        "dependencies": [],
+        "read_versions": {},
+        "action_name": null
+      },
+      "upstream_contract": {
+        "operation": "refund",
+        "idempotency_supported": true,
+        "reconciliation_supported": true,
+        "definitive_absence": true,
+        "irreversible": false,
+        "compensation_supported": false,
+        "compensation_operation": null,
+        "quiescence_certificate_supported": true
+      },
+      "worlds": [
+        {
+          "outcome": "COMMITTED",
+          "facts": [
+            {
+              "name": "refunded",
+              "value": true
+            },
+            {
+              "name": "in_flight",
+              "value": false
+            },
+            {
+              "name": "excess_credit_within_cap",
+              "value": false
+            },
+            {
+              "name": "replacement_authorized",
+              "value": true
+            },
+            {
+              "name": "excess_credit",
+              "value": false
+            },
+            {
+              "name": "incident_note",
+              "value": false
+            },
+            {
+              "name": "fraud_hold",
+              "value": false
+            },
+            {
+              "name": "profile_update",
+              "value": false
+            },
+            {
+              "name": "replacement_shipment",
+              "value": false
+            },
+            {
+              "name": "remove_refunded_loyalty",
+              "value": false
+            },
+            {
+              "name": "customer_credit",
+              "value": false
+            },
+            {
+              "name": "seal_incident",
+              "value": false
+            }
+          ]
+        },
+        {
+          "outcome": "ABSENT",
+          "facts": [
+            {
+              "name": "refunded",
+              "value": false
+            },
+            {
+              "name": "in_flight",
+              "value": false
+            },
+            {
+              "name": "excess_credit_within_cap",
+              "value": false
+            },
+            {
+              "name": "replacement_authorized",
+              "value": true
+            },
+            {
+              "name": "excess_credit",
+              "value": false
+            },
+            {
+              "name": "incident_note",
+              "value": false
+            },
+            {
+              "name": "fraud_hold",
+              "value": false
+            },
+            {
+              "name": "profile_update",
+              "value": false
+            },
+            {
+              "name": "replacement_shipment",
+              "value": false
+            },
+            {
+              "name": "remove_refunded_loyalty",
+              "value": false
+            },
+            {
+              "name": "customer_credit",
+              "value": false
+            },
+            {
+              "name": "seal_incident",
+              "value": false
+            }
+          ]
+        },
+        {
+          "outcome": "IN_FLIGHT",
+          "facts": [
+            {
+              "name": "refunded",
+              "value": false
+            },
+            {
+              "name": "in_flight",
+              "value": true
+            },
+            {
+              "name": "excess_credit_within_cap",
+              "value": false
+            },
+            {
+              "name": "replacement_authorized",
+              "value": true
+            },
+            {
+              "name": "excess_credit",
+              "value": false
+            },
+            {
+              "name": "incident_note",
+              "value": false
+            },
+            {
+              "name": "fraud_hold",
+              "value": false
+            },
+            {
+              "name": "profile_update",
+              "value": false
+            },
+            {
+              "name": "replacement_shipment",
+              "value": false
+            },
+            {
+              "name": "remove_refunded_loyalty",
+              "value": false
+            },
+            {
+              "name": "customer_credit",
+              "value": false
+            },
+            {
+              "name": "seal_incident",
+              "value": false
+            }
+          ]
+        }
+      ],
+      "invariants": [
+        {
+          "invariant_id": "credit_amount_within_500_dollar_cap",
+          "predicate": {
+            "kind": "implies",
+            "field": "",
+            "value": true,
+            "children": [
+              {
+                "kind": "fact",
+                "field": "excess_credit",
+                "value": true,
+                "children": []
+              },
+              {
+                "kind": "fact",
+                "field": "excess_credit_within_cap",
+                "value": true,
+                "children": []
+              }
+            ]
+          }
+        },
+        {
+          "invariant_id": "loyalty_removal_requires_refund",
+          "predicate": {
+            "kind": "implies",
+            "field": "",
+            "value": true,
+            "children": [
+              {
+                "kind": "fact",
+                "field": "remove_refunded_loyalty",
+                "value": true,
+                "children": []
+              },
+              {
+                "kind": "and",
+                "field": "",
+                "value": true,
+                "children": [
+                  {
+                    "kind": "fact",
+                    "field": "refunded",
+                    "value": true,
+                    "children": []
+                  },
+                  {
+                    "kind": "fact",
+                    "field": "in_flight",
+                    "value": false,
+                    "children": []
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "invariant_id": "refund_plus_credit_within_500_dollar_cap",
+          "predicate": {
+            "kind": "implies",
+            "field": "",
+            "value": true,
+            "children": [
+              {
+                "kind": "fact",
+                "field": "customer_credit",
+                "value": true,
+                "children": []
+              },
+              {
+                "kind": "and",
+                "field": "",
+                "value": true,
+                "children": [
+                  {
+                    "kind": "fact",
+                    "field": "refunded",
+                    "value": false,
+                    "children": []
+                  },
+                  {
+                    "kind": "fact",
+                    "field": "in_flight",
+                    "value": false,
+                    "children": []
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "invariant_id": "replacement_independently_authorized",
+          "predicate": {
+            "kind": "implies",
+            "field": "",
+            "value": true,
+            "children": [
+              {
+                "kind": "fact",
+                "field": "replacement_shipment",
+                "value": true,
+                "children": []
+              },
+              {
+                "kind": "fact",
+                "field": "replacement_authorized",
+                "value": true,
+                "children": []
+              }
+            ]
+          }
+        },
+        {
+          "invariant_id": "sealed_incident_cannot_receive_late_refund",
+          "predicate": {
+            "kind": "implies",
+            "field": "",
+            "value": true,
+            "children": [
+              {
+                "kind": "fact",
+                "field": "seal_incident",
+                "value": true,
+                "children": []
+              },
+              {
+                "kind": "fact",
+                "field": "in_flight",
+                "value": false,
+                "children": []
+              }
+            ]
+          }
+        }
+      ],
+      "candidates": [
+        {
+          "intent": {
+            "effect_id": "excess_credit",
+            "logical_operation_id": "candidate:excess_credit",
+            "transaction_id": "txn:excess_credit",
+            "agent_id": "agent:excess_credit",
+            "workflow_id": "workflow:excess_credit",
+            "operation": "candidate",
+            "order_id": "order-1",
+            "incident_id": null,
+            "amount_cents": 60000,
+            "resource_footprint": [
+              "action:excess_credit"
+            ],
+            "semantic_tags": [
+              "customer:customer-1"
+            ],
+            "dependencies": [],
+            "read_versions": {},
+            "action_name": "excess_credit"
+          },
+          "writes": [
+            {
+              "name": "excess_credit",
+              "value": true
+            }
+          ],
+          "reads": [
+            "excess_credit_within_cap"
+          ],
+          "coarse_context": "customer:customer-1",
+          "contract": {
+            "operation": "candidate",
+            "idempotency_supported": true,
+            "reconciliation_supported": true,
+            "definitive_absence": true,
+            "irreversible": true,
+            "compensation_supported": false,
+            "compensation_operation": null,
+            "quiescence_certificate_supported": false
+          }
+        },
+        {
+          "intent": {
+            "effect_id": "incident_note",
+            "logical_operation_id": "candidate:incident_note",
+            "transaction_id": "txn:incident_note",
+            "agent_id": "agent:incident_note",
+            "workflow_id": "workflow:incident_note",
+            "operation": "candidate",
+            "order_id": "order-1",
+            "incident_id": null,
+            "amount_cents": 0,
+            "resource_footprint": [
+              "action:incident_note"
+            ],
+            "semantic_tags": [
+              "customer:customer-1"
+            ],
+            "dependencies": [],
+            "read_versions": {},
+            "action_name": "incident_note"
+          },
+          "writes": [
+            {
+              "name": "incident_note",
+              "value": true
+            }
+          ],
+          "reads": [],
+          "coarse_context": "customer:customer-1",
+          "contract": {
+            "operation": "candidate",
+            "idempotency_supported": true,
+            "reconciliation_supported": true,
+            "definitive_absence": true,
+            "irreversible": false,
+            "compensation_supported": false,
+            "compensation_operation": null,
+            "quiescence_certificate_supported": false
+          }
+        },
+        {
+          "intent": {
+            "effect_id": "fraud_hold",
+            "logical_operation_id": "candidate:fraud_hold",
+            "transaction_id": "txn:fraud_hold",
+            "agent_id": "agent:fraud_hold",
+            "workflow_id": "workflow:fraud_hold",
+            "operation": "candidate",
+            "order_id": "order-1",
+            "incident_id": null,
+            "amount_cents": 0,
+            "resource_footprint": [
+              "action:fraud_hold"
+            ],
+            "semantic_tags": [
+              "customer:customer-1"
+            ],
+            "dependencies": [],
+            "read_versions": {},
+            "action_name": "fraud_hold"
+          },
+          "writes": [
+            {
+              "name": "fraud_hold",
+              "value": true
+            }
+          ],
+          "reads": [],
+          "coarse_context": "customer:customer-1",
+          "contract": {
+            "operation": "candidate",
+            "idempotency_supported": true,
+            "reconciliation_supported": true,
+            "definitive_absence": true,
+            "irreversible": false,
+            "compensation_supported": false,
+            "compensation_operation": null,
+            "quiescence_certificate_supported": false
+          }
+        },
+        {
+          "intent": {
+            "effect_id": "profile_update",
+            "logical_operation_id": "candidate:profile_update",
+            "transaction_id": "txn:profile_update",
+            "agent_id": "agent:profile_update",
+            "workflow_id": "workflow:profile_update",
+            "operation": "candidate",
+            "order_id": "order-1",
+            "incident_id": null,
+            "amount_cents": 0,
+            "resource_footprint": [
+              "action:profile_update"
+            ],
+            "semantic_tags": [
+              "customer:customer-1"
+            ],
+            "dependencies": [],
+            "read_versions": {},
+            "action_name": "profile_update"
+          },
+          "writes": [
+            {
+              "name": "profile_update",
+              "value": true
+            }
+          ],
+          "reads": [],
+          "coarse_context": "customer:customer-1",
+          "contract": {
+            "operation": "candidate",
+            "idempotency_supported": true,
+            "reconciliation_supported": true,
+            "definitive_absence": true,
+            "irreversible": false,
+            "compensation_supported": false,
+            "compensation_operation": null,
+            "quiescence_certificate_supported": false
+          }
+        },
+        {
+          "intent": {
+            "effect_id": "replacement_shipment",
+            "logical_operation_id": "candidate:replacement_shipment",
+            "transaction_id": "txn:replacement_shipment",
+            "agent_id": "agent:replacement_shipment",
+            "workflow_id": "workflow:replacement_shipment",
+            "operation": "candidate",
+            "order_id": "order-1",
+            "incident_id": null,
+            "amount_cents": 0,
+            "resource_footprint": [
+              "action:replacement_shipment"
+            ],
+            "semantic_tags": [
+              "customer:customer-1"
+            ],
+            "dependencies": [],
+            "read_versions": {},
+            "action_name": "replacement_shipment"
+          },
+          "writes": [
+            {
+              "name": "replacement_shipment",
+              "value": true
+            }
+          ],
+          "reads": [
+            "replacement_authorized"
+          ],
+          "coarse_context": "customer:customer-1",
+          "contract": {
+            "operation": "candidate",
+            "idempotency_supported": true,
+            "reconciliation_supported": true,
+            "definitive_absence": true,
+            "irreversible": true,
+            "compensation_supported": false,
+            "compensation_operation": null,
+            "quiescence_certificate_supported": false
+          }
+        },
+        {
+          "intent": {
+            "effect_id": "remove_refunded_loyalty",
+            "logical_operation_id": "candidate:remove_refunded_loyalty",
+            "transaction_id": "txn:remove_refunded_loyalty",
+            "agent_id": "agent:remove_refunded_loyalty",
+            "workflow_id": "workflow:remove_refunded_loyalty",
+            "operation": "candidate",
+            "order_id": "order-1",
+            "incident_id": null,
+            "amount_cents": 0,
+            "resource_footprint": [
+              "action:remove_refunded_loyalty"
+            ],
+            "semantic_tags": [
+              "customer:customer-1"
+            ],
+            "dependencies": [
+              "upstream"
+            ],
+            "read_versions": {},
+            "action_name": "remove_refunded_loyalty"
+          },
+          "writes": [
+            {
+              "name": "remove_refunded_loyalty",
+              "value": true
+            }
+          ],
+          "reads": [
+            "refunded",
+            "in_flight"
+          ],
+          "coarse_context": "customer:customer-1",
+          "contract": {
+            "operation": "candidate",
+            "idempotency_supported": true,
+            "reconciliation_supported": true,
+            "definitive_absence": true,
+            "irreversible": false,
+            "compensation_supported": false,
+            "compensation_operation": null,
+            "quiescence_certificate_supported": false
+          }
+        },
+        {
+          "intent": {
+            "effect_id": "customer_credit",
+            "logical_operation_id": "candidate:customer_credit",
+            "transaction_id": "txn:customer_credit",
+            "agent_id": "agent:customer_credit",
+            "workflow_id": "workflow:customer_credit",
+            "operation": "candidate",
+            "order_id": "order-1",
+            "incident_id": null,
+            "amount_cents": 30000,
+            "resource_footprint": [
+              "action:customer_credit"
+            ],
+            "semantic_tags": [
+              "customer:customer-1"
+            ],
+            "dependencies": [
+              "upstream"
+            ],
+            "read_versions": {},
+            "action_name": "customer_credit"
+          },
+          "writes": [
+            {
+              "name": "customer_credit",
+              "value": true
+            }
+          ],
+          "reads": [
+            "refunded",
+            "in_flight"
+          ],
+          "coarse_context": "customer:customer-1",
+          "contract": {
+            "operation": "candidate",
+            "idempotency_supported": true,
+            "reconciliation_supported": true,
+            "definitive_absence": true,
+            "irreversible": true,
+            "compensation_supported": false,
+            "compensation_operation": null,
+            "quiescence_certificate_supported": false
+          }
+        },
+        {
+          "intent": {
+            "effect_id": "seal_incident",
+            "logical_operation_id": "candidate:seal_incident",
+            "transaction_id": "txn:seal_incident",
+            "agent_id": "agent:seal_incident",
+            "workflow_id": "workflow:seal_incident",
+            "operation": "candidate",
+            "order_id": "order-1",
+            "incident_id": null,
+            "amount_cents": 0,
+            "resource_footprint": [
+              "action:seal_incident"
+            ],
+            "semantic_tags": [
+              "customer:customer-1"
+            ],
+            "dependencies": [
+              "upstream"
+            ],
+            "read_versions": {},
+            "action_name": "seal_incident"
+          },
+          "writes": [
+            {
+              "name": "seal_incident",
+              "value": true
+            }
+          ],
+          "reads": [
+            "in_flight"
+          ],
+          "coarse_context": "customer:customer-1",
+          "contract": {
+            "operation": "candidate",
+            "idempotency_supported": true,
+            "reconciliation_supported": true,
+            "definitive_absence": true,
+            "irreversible": false,
+            "compensation_supported": false,
+            "compensation_operation": null,
+            "quiescence_certificate_supported": false
+          }
+        }
+      ],
+      "fault_schedule": [
+        "round0: ambiguous timeout; request may have committed, be absent, or remain in flight",
+        "round1: opaque receipt lookup; no outcome eliminated",
+        "round2: authoritative quiescence certificate; no request remains in flight",
+        "round3: authoritative committed or terminal-abort receipt"
+      ],
+      "reconciliation_endpoint": "/operations/upstream",
+      "causal_contract": "IN_FLIGHT can later COMMIT or become definitively ABSENT; no bound assumed",
+      "version": "gate1b-v1"
+    }
+  ],
+  "realizations": [
+    "hidden_committed",
+    "hidden_absent",
+    "late_commit",
+    "terminal_abort"
+  ],
+  "equivalence_audit": {
+    "candidate_outcome_cases_per_policy": 112,
+    "comparisons": {
+      "global_fail_closed": 112,
+      "synthetic_scope_occ": 112,
+      "atomix_scope_frontier": 112,
+      "semantic_pending_lock": 112,
+      "tct_c_joint_recertification": 112
+    },
+    "decision_differences_from_oca": {
+      "global_fail_closed": 37,
+      "synthetic_scope_occ": 0,
+      "atomix_scope_frontier": 0,
+      "semantic_pending_lock": 0,
+      "tct_c_joint_recertification": 0
+    },
+    "joint_safe_subsets_checked": 368
+  },
+  "results": [
+    {
+      "scenario_id": "payment_fanout",
+      "realization": "hidden_committed",
+      "baseline": "global_fail_closed",
+      "seed": 42,
+      "metrics": {
+        "decision_opportunities": 32,
+        "unsafe_admissions": 0,
+        "unsafe_admission_rate": 0.0,
+        "unsafe_actual_commits": 0,
+        "unsafe_commit_rate": 0.0,
+        "actual_candidate_commits": 6,
+        "physical_violation_events": 0,
+        "physical_state_checks": 10,
+        "invariant_violation_rate": 0.0,
+        "duplicate_effects": 0,
+        "duplicate_effect_rate": 0.0,
+        "irrecoverable_residue_events": 0,
+        "pre_resolution_safe_opportunities": 10,
+        "safe_opportunities_unnecessarily_blocked": 10,
+        "collateral_block_rate": 1.0,
+        "collateral_safe_actions_distinct": 4,
+        "safe_actions_admitted_before_resolution": 0,
+        "uncertainty_blast_radius": 7,
+        "mean_waiting_fanout": 7.0,
+        "irrelevant_wait_action_rounds": 10
+      },
+      "trace_file": "payment_fanout__hidden_committed__global_fail_closed.jsonl",
+      "input_hashes": [
+        "f2d6a70b1a300bc5f2e1bc39bb24f211ddfd818ad458b7892b9898cbc29de463",
+        "47e0e13e34d6384a2a95817b5ba5925cb3e93fb668ec79839089772f8bf3c4b0",
+        "74b81cbb2ab88b77a248ffefcd42a02b18b2db016b39f135566ef05d4f2fb15f",
+        "0bf2f211aaa618ca6a7455f857173c0dfa3ec10cec849f0f157f0525c84b3d5a"
+      ],
+      "max_candidate_calls_in_flight": 6
+    },
+    {
+      "scenario_id": "payment_fanout",
+      "realization": "hidden_committed",
+      "baseline": "synthetic_scope_occ",
+      "seed": 42,
+      "metrics": {
+        "decision_opportunities": 32,
+        "unsafe_admissions": 0,
+        "unsafe_admission_rate": 0.0,
+        "unsafe_actual_commits": 0,
+        "unsafe_commit_rate": 0.0,
+        "actual_candidate_commits": 6,
+        "physical_violation_events": 0,
+        "physical_state_checks": 10,
+        "invariant_violation_rate": 0.0,
+        "duplicate_effects": 0,
+        "duplicate_effect_rate": 0.0,
+        "irrecoverable_residue_events": 0,
+        "pre_resolution_safe_opportunities": 10,
+        "safe_opportunities_unnecessarily_blocked": 0,
+        "collateral_block_rate": 0.0,
+        "collateral_safe_actions_distinct": 0,
+        "safe_actions_admitted_before_resolution": 4,
+        "uncertainty_blast_radius": 4,
+        "mean_waiting_fanout": 3.6666666666666665,
+        "irrelevant_wait_action_rounds": 0
+      },
+      "trace_file": "payment_fanout__hidden_committed__synthetic_scope_occ.jsonl",
+      "input_hashes": [
+        "f2d6a70b1a300bc5f2e1bc39bb24f211ddfd818ad458b7892b9898cbc29de463",
+        "47e0e13e34d6384a2a95817b5ba5925cb3e93fb668ec79839089772f8bf3c4b0",
+        "74b81cbb2ab88b77a248ffefcd42a02b18b2db016b39f135566ef05d4f2fb15f",
+        "0bf2f211aaa618ca6a7455f857173c0dfa3ec10cec849f0f157f0525c84b3d5a"
+      ],
+      "max_candidate_calls_in_flight": 3
+    },
+    {
+      "scenario_id": "payment_fanout",
+      "realization": "hidden_committed",
+      "baseline": "atomix_scope_frontier",
+      "seed": 42,
+      "metrics": {
+        "decision_opportunities": 32,
+        "unsafe_admissions": 0,
+        "unsafe_admission_rate": 0.0,
+        "unsafe_actual_commits": 0,
+        "unsafe_commit_rate": 0.0,
+        "actual_candidate_commits": 6,
+        "physical_violation_events": 0,
+        "physical_state_checks": 10,
+        "invariant_violation_rate": 0.0,
+        "duplicate_effects": 0,
+        "duplicate_effect_rate": 0.0,
+        "irrecoverable_residue_events": 0,
+        "pre_resolution_safe_opportunities": 10,
+        "safe_opportunities_unnecessarily_blocked": 0,
+        "collateral_block_rate": 0.0,
+        "collateral_safe_actions_distinct": 0,
+        "safe_actions_admitted_before_resolution": 4,
+        "uncertainty_blast_radius": 4,
+        "mean_waiting_fanout": 3.6666666666666665,
+        "irrelevant_wait_action_rounds": 0
+      },
+      "trace_file": "payment_fanout__hidden_committed__atomix_scope_frontier.jsonl",
+      "input_hashes": [
+        "f2d6a70b1a300bc5f2e1bc39bb24f211ddfd818ad458b7892b9898cbc29de463",
+        "47e0e13e34d6384a2a95817b5ba5925cb3e93fb668ec79839089772f8bf3c4b0",
+        "74b81cbb2ab88b77a248ffefcd42a02b18b2db016b39f135566ef05d4f2fb15f",
+        "0bf2f211aaa618ca6a7455f857173c0dfa3ec10cec849f0f157f0525c84b3d5a"
+      ],
+      "max_candidate_calls_in_flight": 3
+    },
+    {
+      "scenario_id": "payment_fanout",
+      "realization": "hidden_committed",
+      "baseline": "semantic_pending_lock",
+      "seed": 42,
+      "metrics": {
+        "decision_opportunities": 32,
+        "unsafe_admissions": 0,
+        "unsafe_admission_rate": 0.0,
+        "unsafe_actual_commits": 0,
+        "unsafe_commit_rate": 0.0,
+        "actual_candidate_commits": 6,
+        "physical_violation_events": 0,
+        "physical_state_checks": 10,
+        "invariant_violation_rate": 0.0,
+        "duplicate_effects": 0,
+        "duplicate_effect_rate": 0.0,
+        "irrecoverable_residue_events": 0,
+        "pre_resolution_safe_opportunities": 10,
+        "safe_opportunities_unnecessarily_blocked": 0,
+        "collateral_block_rate": 0.0,
+        "collateral_safe_actions_distinct": 0,
+        "safe_actions_admitted_before_resolution": 4,
+        "uncertainty_blast_radius": 4,
+        "mean_waiting_fanout": 3.6666666666666665,
+        "irrelevant_wait_action_rounds": 0
+      },
+      "trace_file": "payment_fanout__hidden_committed__semantic_pending_lock.jsonl",
+      "input_hashes": [
+        "f2d6a70b1a300bc5f2e1bc39bb24f211ddfd818ad458b7892b9898cbc29de463",
+        "47e0e13e34d6384a2a95817b5ba5925cb3e93fb668ec79839089772f8bf3c4b0",
+        "74b81cbb2ab88b77a248ffefcd42a02b18b2db016b39f135566ef05d4f2fb15f",
+        "0bf2f211aaa618ca6a7455f857173c0dfa3ec10cec849f0f157f0525c84b3d5a"
+      ],
+      "max_candidate_calls_in_flight": 3
+    },
+    {
+      "scenario_id": "payment_fanout",
+      "realization": "hidden_committed",
+      "baseline": "tct_c_joint_recertification",
+      "seed": 42,
+      "metrics": {
+        "decision_opportunities": 32,
+        "unsafe_admissions": 0,
+        "unsafe_admission_rate": 0.0,
+        "unsafe_actual_commits": 0,
+        "unsafe_commit_rate": 0.0,
+        "actual_candidate_commits": 6,
+        "physical_violation_events": 0,
+        "physical_state_checks": 10,
+        "invariant_violation_rate": 0.0,
+        "duplicate_effects": 0,
+        "duplicate_effect_rate": 0.0,
+        "irrecoverable_residue_events": 0,
+        "pre_resolution_safe_opportunities": 10,
+        "safe_opportunities_unnecessarily_blocked": 0,
+        "collateral_block_rate": 0.0,
+        "collateral_safe_actions_distinct": 0,
+        "safe_actions_admitted_before_resolution": 4,
+        "uncertainty_blast_radius": 4,
+        "mean_waiting_fanout": 3.6666666666666665,
+        "irrelevant_wait_action_rounds": 0
+      },
+      "trace_file": "payment_fanout__hidden_committed__tct_c_joint_recertification.jsonl",
+      "input_hashes": [
+        "f2d6a70b1a300bc5f2e1bc39bb24f211ddfd818ad458b7892b9898cbc29de463",
+        "47e0e13e34d6384a2a95817b5ba5925cb3e93fb668ec79839089772f8bf3c4b0",
+        "74b81cbb2ab88b77a248ffefcd42a02b18b2db016b39f135566ef05d4f2fb15f",
+        "0bf2f211aaa618ca6a7455f857173c0dfa3ec10cec849f0f157f0525c84b3d5a"
+      ],
+      "max_candidate_calls_in_flight": 3
+    },
+    {
+      "scenario_id": "payment_fanout",
+      "realization": "hidden_committed",
+      "baseline": "agenttxn_oca",
+      "seed": 42,
+      "metrics": {
+        "decision_opportunities": 32,
+        "unsafe_admissions": 0,
+        "unsafe_admission_rate": 0.0,
+        "unsafe_actual_commits": 0,
+        "unsafe_commit_rate": 0.0,
+        "actual_candidate_commits": 6,
+        "physical_violation_events": 0,
+        "physical_state_checks": 10,
+        "invariant_violation_rate": 0.0,
+        "duplicate_effects": 0,
+        "duplicate_effect_rate": 0.0,
+        "irrecoverable_residue_events": 0,
+        "pre_resolution_safe_opportunities": 10,
+        "safe_opportunities_unnecessarily_blocked": 0,
+        "collateral_block_rate": 0.0,
+        "collateral_safe_actions_distinct": 0,
+        "safe_actions_admitted_before_resolution": 4,
+        "uncertainty_blast_radius": 4,
+        "mean_waiting_fanout": 3.6666666666666665,
+        "irrelevant_wait_action_rounds": 0
+      },
+      "trace_file": "payment_fanout__hidden_committed__agenttxn_oca.jsonl",
+      "input_hashes": [
+        "f2d6a70b1a300bc5f2e1bc39bb24f211ddfd818ad458b7892b9898cbc29de463",
+        "47e0e13e34d6384a2a95817b5ba5925cb3e93fb668ec79839089772f8bf3c4b0",
+        "74b81cbb2ab88b77a248ffefcd42a02b18b2db016b39f135566ef05d4f2fb15f",
+        "0bf2f211aaa618ca6a7455f857173c0dfa3ec10cec849f0f157f0525c84b3d5a"
+      ],
+      "max_candidate_calls_in_flight": 3
+    },
+    {
+      "scenario_id": "payment_fanout",
+      "realization": "hidden_absent",
+      "baseline": "global_fail_closed",
+      "seed": 42,
+      "metrics": {
+        "decision_opportunities": 32,
+        "unsafe_admissions": 0,
+        "unsafe_admission_rate": 0.0,
+        "unsafe_actual_commits": 0,
+        "unsafe_commit_rate": 0.0,
+        "actual_candidate_commits": 5,
+        "physical_violation_events": 0,
+        "physical_state_checks": 9,
+        "invariant_violation_rate": 0.0,
+        "duplicate_effects": 0,
+        "duplicate_effect_rate": 0.0,
+        "irrecoverable_residue_events": 0,
+        "pre_resolution_safe_opportunities": 10,
+        "safe_opportunities_unnecessarily_blocked": 10,
+        "collateral_block_rate": 1.0,
+        "collateral_safe_actions_distinct": 4,
+        "safe_actions_admitted_before_resolution": 0,
+        "uncertainty_blast_radius": 7,
+        "mean_waiting_fanout": 7.0,
+        "irrelevant_wait_action_rounds": 10
+      },
+      "trace_file": "payment_fanout__hidden_absent__global_fail_closed.jsonl",
+      "input_hashes": [
+        "f2d6a70b1a300bc5f2e1bc39bb24f211ddfd818ad458b7892b9898cbc29de463",
+        "47e0e13e34d6384a2a95817b5ba5925cb3e93fb668ec79839089772f8bf3c4b0",
+        "74b81cbb2ab88b77a248ffefcd42a02b18b2db016b39f135566ef05d4f2fb15f",
+        "d016598386a68bdcbd3bb73564a6199918520af24bec5d7055eb2a0ec1c21288"
+      ],
+      "max_candidate_calls_in_flight": 5
+    },
+    {
+      "scenario_id": "payment_fanout",
+      "realization": "hidden_absent",
+      "baseline": "synthetic_scope_occ",
+      "seed": 42,
+      "metrics": {
+        "decision_opportunities": 32,
+        "unsafe_admissions": 0,
+        "unsafe_admission_rate": 0.0,
+        "unsafe_actual_commits": 0,
+        "unsafe_commit_rate": 0.0,
+        "actual_candidate_commits": 5,
+        "physical_violation_events": 0,
+        "physical_state_checks": 9,
+        "invariant_violation_rate": 0.0,
+        "duplicate_effects": 0,
+        "duplicate_effect_rate": 0.0,
+        "irrecoverable_residue_events": 0,
+        "pre_resolution_safe_opportunities": 10,
+        "safe_opportunities_unnecessarily_blocked": 0,
+        "collateral_block_rate": 0.0,
+        "collateral_safe_actions_distinct": 0,
+        "safe_actions_admitted_before_resolution": 4,
+        "uncertainty_blast_radius": 4,
+        "mean_waiting_fanout": 3.6666666666666665,
+        "irrelevant_wait_action_rounds": 0
+      },
+      "trace_file": "payment_fanout__hidden_absent__synthetic_scope_occ.jsonl",
+      "input_hashes": [
+        "f2d6a70b1a300bc5f2e1bc39bb24f211ddfd818ad458b7892b9898cbc29de463",
+        "47e0e13e34d6384a2a95817b5ba5925cb3e93fb668ec79839089772f8bf3c4b0",
+        "74b81cbb2ab88b77a248ffefcd42a02b18b2db016b39f135566ef05d4f2fb15f",
+        "d016598386a68bdcbd3bb73564a6199918520af24bec5d7055eb2a0ec1c21288"
+      ],
+      "max_candidate_calls_in_flight": 3
+    },
+    {
+      "scenario_id": "payment_fanout",
+      "realization": "hidden_absent",
+      "baseline": "atomix_scope_frontier",
+      "seed": 42,
+      "metrics": {
+        "decision_opportunities": 32,
+        "unsafe_admissions": 0,
+        "unsafe_admission_rate": 0.0,
+        "unsafe_actual_commits": 0,
+        "unsafe_commit_rate": 0.0,
+        "actual_candidate_commits": 5,
+        "physical_violation_events": 0,
+        "physical_state_checks": 9,
+        "invariant_violation_rate": 0.0,
+        "duplicate_effects": 0,
+        "duplicate_effect_rate": 0.0,
+        "irrecoverable_residue_events": 0,
+        "pre_resolution_safe_opportunities": 10,
+        "safe_opportunities_unnecessarily_blocked": 0,
+        "collateral_block_rate": 0.0,
+        "collateral_safe_actions_distinct": 0,
+        "safe_actions_admitted_before_resolution": 4,
+        "uncertainty_blast_radius": 4,
+        "mean_waiting_fanout": 3.6666666666666665,
+        "irrelevant_wait_action_rounds": 0
+      },
+      "trace_file": "payment_fanout__hidden_absent__atomix_scope_frontier.jsonl",
+      "input_hashes": [
+        "f2d6a70b1a300bc5f2e1bc39bb24f211ddfd818ad458b7892b9898cbc29de463",
+        "47e0e13e34d6384a2a95817b5ba5925cb3e93fb668ec79839089772f8bf3c4b0",
+        "74b81cbb2ab88b77a248ffefcd42a02b18b2db016b39f135566ef05d4f2fb15f",
+        "d016598386a68bdcbd3bb73564a6199918520af24bec5d7055eb2a0ec1c21288"
+      ],
+      "max_candidate_calls_in_flight": 3
+    },
+    {
+      "scenario_id": "payment_fanout",
+      "realization": "hidden_absent",
+      "baseline": "semantic_pending_lock",
+      "seed": 42,
+      "metrics": {
+        "decision_opportunities": 32,
+        "unsafe_admissions": 0,
+        "unsafe_admission_rate": 0.0,
+        "unsafe_actual_commits": 0,
+        "unsafe_commit_rate": 0.0,
+        "actual_candidate_commits": 5,
+        "physical_violation_events": 0,
+        "physical_state_checks": 9,
+        "invariant_violation_rate": 0.0,
+        "duplicate_effects": 0,
+        "duplicate_effect_rate": 0.0,
+        "irrecoverable_residue_events": 0,
+        "pre_resolution_safe_opportunities": 10,
+        "safe_opportunities_unnecessarily_blocked": 0,
+        "collateral_block_rate": 0.0,
+        "collateral_safe_actions_distinct": 0,
+        "safe_actions_admitted_before_resolution": 4,
+        "uncertainty_blast_radius": 4,
+        "mean_waiting_fanout": 3.6666666666666665,
+        "irrelevant_wait_action_rounds": 0
+      },
+      "trace_file": "payment_fanout__hidden_absent__semantic_pending_lock.jsonl",
+      "input_hashes": [
+        "f2d6a70b1a300bc5f2e1bc39bb24f211ddfd818ad458b7892b9898cbc29de463",
+        "47e0e13e34d6384a2a95817b5ba5925cb3e93fb668ec79839089772f8bf3c4b0",
+        "74b81cbb2ab88b77a248ffefcd42a02b18b2db016b39f135566ef05d4f2fb15f",
+        "d016598386a68bdcbd3bb73564a6199918520af24bec5d7055eb2a0ec1c21288"
+      ],
+      "max_candidate_calls_in_flight": 3
+    },
+    {
+      "scenario_id": "payment_fanout",
+      "realization": "hidden_absent",
+      "baseline": "tct_c_joint_recertification",
+      "seed": 42,
+      "metrics": {
+        "decision_opportunities": 32,
+        "unsafe_admissions": 0,
+        "unsafe_admission_rate": 0.0,
+        "unsafe_actual_commits": 0,
+        "unsafe_commit_rate": 0.0,
+        "actual_candidate_commits": 5,
+        "physical_violation_events": 0,
+        "physical_state_checks": 9,
+        "invariant_violation_rate": 0.0,
+        "duplicate_effects": 0,
+        "duplicate_effect_rate": 0.0,
+        "irrecoverable_residue_events": 0,
+        "pre_resolution_safe_opportunities": 10,
+        "safe_opportunities_unnecessarily_blocked": 0,
+        "collateral_block_rate": 0.0,
+        "collateral_safe_actions_distinct": 0,
+        "safe_actions_admitted_before_resolution": 4,
+        "uncertainty_blast_radius": 4,
+        "mean_waiting_fanout": 3.6666666666666665,
+        "irrelevant_wait_action_rounds": 0
+      },
+      "trace_file": "payment_fanout__hidden_absent__tct_c_joint_recertification.jsonl",
+      "input_hashes": [
+        "f2d6a70b1a300bc5f2e1bc39bb24f211ddfd818ad458b7892b9898cbc29de463",
+        "47e0e13e34d6384a2a95817b5ba5925cb3e93fb668ec79839089772f8bf3c4b0",
+        "74b81cbb2ab88b77a248ffefcd42a02b18b2db016b39f135566ef05d4f2fb15f",
+        "d016598386a68bdcbd3bb73564a6199918520af24bec5d7055eb2a0ec1c21288"
+      ],
+      "max_candidate_calls_in_flight": 3
+    },
+    {
+      "scenario_id": "payment_fanout",
+      "realization": "hidden_absent",
+      "baseline": "agenttxn_oca",
+      "seed": 42,
+      "metrics": {
+        "decision_opportunities": 32,
+        "unsafe_admissions": 0,
+        "unsafe_admission_rate": 0.0,
+        "unsafe_actual_commits": 0,
+        "unsafe_commit_rate": 0.0,
+        "actual_candidate_commits": 5,
+        "physical_violation_events": 0,
+        "physical_state_checks": 9,
+        "invariant_violation_rate": 0.0,
+        "duplicate_effects": 0,
+        "duplicate_effect_rate": 0.0,
+        "irrecoverable_residue_events": 0,
+        "pre_resolution_safe_opportunities": 10,
+        "safe_opportunities_unnecessarily_blocked": 0,
+        "collateral_block_rate": 0.0,
+        "collateral_safe_actions_distinct": 0,
+        "safe_actions_admitted_before_resolution": 4,
+        "uncertainty_blast_radius": 4,
+        "mean_waiting_fanout": 3.6666666666666665,
+        "irrelevant_wait_action_rounds": 0
+      },
+      "trace_file": "payment_fanout__hidden_absent__agenttxn_oca.jsonl",
+      "input_hashes": [
+        "f2d6a70b1a300bc5f2e1bc39bb24f211ddfd818ad458b7892b9898cbc29de463",
+        "47e0e13e34d6384a2a95817b5ba5925cb3e93fb668ec79839089772f8bf3c4b0",
+        "74b81cbb2ab88b77a248ffefcd42a02b18b2db016b39f135566ef05d4f2fb15f",
+        "d016598386a68bdcbd3bb73564a6199918520af24bec5d7055eb2a0ec1c21288"
+      ],
+      "max_candidate_calls_in_flight": 3
+    },
+    {
+      "scenario_id": "payment_fanout",
+      "realization": "late_commit",
+      "baseline": "global_fail_closed",
+      "seed": 42,
+      "metrics": {
+        "decision_opportunities": 32,
+        "unsafe_admissions": 0,
+        "unsafe_admission_rate": 0.0,
+        "unsafe_actual_commits": 0,
+        "unsafe_commit_rate": 0.0,
+        "actual_candidate_commits": 6,
+        "physical_violation_events": 0,
+        "physical_state_checks": 10,
+        "invariant_violation_rate": 0.0,
+        "duplicate_effects": 0,
+        "duplicate_effect_rate": 0.0,
+        "irrecoverable_residue_events": 0,
+        "pre_resolution_safe_opportunities": 10,
+        "safe_opportunities_unnecessarily_blocked": 10,
+        "collateral_block_rate": 1.0,
+        "collateral_safe_actions_distinct": 4,
+        "safe_actions_admitted_before_resolution": 0,
+        "uncertainty_blast_radius": 7,
+        "mean_waiting_fanout": 7.0,
+        "irrelevant_wait_action_rounds": 10
+      },
+      "trace_file": "payment_fanout__late_commit__global_fail_closed.jsonl",
+      "input_hashes": [
+        "f2d6a70b1a300bc5f2e1bc39bb24f211ddfd818ad458b7892b9898cbc29de463",
+        "47e0e13e34d6384a2a95817b5ba5925cb3e93fb668ec79839089772f8bf3c4b0",
+        "74b81cbb2ab88b77a248ffefcd42a02b18b2db016b39f135566ef05d4f2fb15f",
+        "0bf2f211aaa618ca6a7455f857173c0dfa3ec10cec849f0f157f0525c84b3d5a"
+      ],
+      "max_candidate_calls_in_flight": 6
+    },
+    {
+      "scenario_id": "payment_fanout",
+      "realization": "late_commit",
+      "baseline": "synthetic_scope_occ",
+      "seed": 42,
+      "metrics": {
+        "decision_opportunities": 32,
+        "unsafe_admissions": 0,
+        "unsafe_admission_rate": 0.0,
+        "unsafe_actual_commits": 0,
+        "unsafe_commit_rate": 0.0,
+        "actual_candidate_commits": 6,
+        "physical_violation_events": 0,
+        "physical_state_checks": 10,
+        "invariant_violation_rate": 0.0,
+        "duplicate_effects": 0,
+        "duplicate_effect_rate": 0.0,
+        "irrecoverable_residue_events": 0,
+        "pre_resolution_safe_opportunities": 10,
+        "safe_opportunities_unnecessarily_blocked": 0,
+        "collateral_block_rate": 0.0,
+        "collateral_safe_actions_distinct": 0,
+        "safe_actions_admitted_before_resolution": 4,
+        "uncertainty_blast_radius": 4,
+        "mean_waiting_fanout": 3.6666666666666665,
+        "irrelevant_wait_action_rounds": 0
+      },
+      "trace_file": "payment_fanout__late_commit__synthetic_scope_occ.jsonl",
+      "input_hashes": [
+        "f2d6a70b1a300bc5f2e1bc39bb24f211ddfd818ad458b7892b9898cbc29de463",
+        "47e0e13e34d6384a2a95817b5ba5925cb3e93fb668ec79839089772f8bf3c4b0",
+        "74b81cbb2ab88b77a248ffefcd42a02b18b2db016b39f135566ef05d4f2fb15f",
+        "0bf2f211aaa618ca6a7455f857173c0dfa3ec10cec849f0f157f0525c84b3d5a"
+      ],
+      "max_candidate_calls_in_flight": 3
+    },
+    {
+      "scenario_id": "payment_fanout",
+      "realization": "late_commit",
+      "baseline": "atomix_scope_frontier",
+      "seed": 42,
+      "metrics": {
+        "decision_opportunities": 32,
+        "unsafe_admissions": 0,
+        "unsafe_admission_rate": 0.0,
+        "unsafe_actual_commits": 0,
+        "unsafe_commit_rate": 0.0,
+        "actual_candidate_commits": 6,
+        "physical_violation_events": 0,
+        "physical_state_checks": 10,
+        "invariant_violation_rate": 0.0,
+        "duplicate_effects": 0,
+        "duplicate_effect_rate": 0.0,
+        "irrecoverable_residue_events": 0,
+        "pre_resolution_safe_opportunities": 10,
+        "safe_opportunities_unnecessarily_blocked": 0,
+        "collateral_block_rate": 0.0,
+        "collateral_safe_actions_distinct": 0,
+        "safe_actions_admitted_before_resolution": 4,
+        "uncertainty_blast_radius": 4,
+        "mean_waiting_fanout": 3.6666666666666665,
+        "irrelevant_wait_action_rounds": 0
+      },
+      "trace_file": "payment_fanout__late_commit__atomix_scope_frontier.jsonl",
+      "input_hashes": [
+        "f2d6a70b1a300bc5f2e1bc39bb24f211ddfd818ad458b7892b9898cbc29de463",
+        "47e0e13e34d6384a2a95817b5ba5925cb3e93fb668ec79839089772f8bf3c4b0",
+        "74b81cbb2ab88b77a248ffefcd42a02b18b2db016b39f135566ef05d4f2fb15f",
+        "0bf2f211aaa618ca6a7455f857173c0dfa3ec10cec849f0f157f0525c84b3d5a"
+      ],
+      "max_candidate_calls_in_flight": 3
+    },
+    {
+      "scenario_id": "payment_fanout",
+      "realization": "late_commit",
+      "baseline": "semantic_pending_lock",
+      "seed": 42,
+      "metrics": {
+        "decision_opportunities": 32,
+        "unsafe_admissions": 0,
+        "unsafe_admission_rate": 0.0,
+        "unsafe_actual_commits": 0,
+        "unsafe_commit_rate": 0.0,
+        "actual_candidate_commits": 6,
+        "physical_violation_events": 0,
+        "physical_state_checks": 10,
+        "invariant_violation_rate": 0.0,
+        "duplicate_effects": 0,
+        "duplicate_effect_rate": 0.0,
+        "irrecoverable_residue_events": 0,
+        "pre_resolution_safe_opportunities": 10,
+        "safe_opportunities_unnecessarily_blocked": 0,
+        "collateral_block_rate": 0.0,
+        "collateral_safe_actions_distinct": 0,
+        "safe_actions_admitted_before_resolution": 4,
+        "uncertainty_blast_radius": 4,
+        "mean_waiting_fanout": 3.6666666666666665,
+        "irrelevant_wait_action_rounds": 0
+      },
+      "trace_file": "payment_fanout__late_commit__semantic_pending_lock.jsonl",
+      "input_hashes": [
+        "f2d6a70b1a300bc5f2e1bc39bb24f211ddfd818ad458b7892b9898cbc29de463",
+        "47e0e13e34d6384a2a95817b5ba5925cb3e93fb668ec79839089772f8bf3c4b0",
+        "74b81cbb2ab88b77a248ffefcd42a02b18b2db016b39f135566ef05d4f2fb15f",
+        "0bf2f211aaa618ca6a7455f857173c0dfa3ec10cec849f0f157f0525c84b3d5a"
+      ],
+      "max_candidate_calls_in_flight": 3
+    },
+    {
+      "scenario_id": "payment_fanout",
+      "realization": "late_commit",
+      "baseline": "tct_c_joint_recertification",
+      "seed": 42,
+      "metrics": {
+        "decision_opportunities": 32,
+        "unsafe_admissions": 0,
+        "unsafe_admission_rate": 0.0,
+        "unsafe_actual_commits": 0,
+        "unsafe_commit_rate": 0.0,
+        "actual_candidate_commits": 6,
+        "physical_violation_events": 0,
+        "physical_state_checks": 10,
+        "invariant_violation_rate": 0.0,
+        "duplicate_effects": 0,
+        "duplicate_effect_rate": 0.0,
+        "irrecoverable_residue_events": 0,
+        "pre_resolution_safe_opportunities": 10,
+        "safe_opportunities_unnecessarily_blocked": 0,
+        "collateral_block_rate": 0.0,
+        "collateral_safe_actions_distinct": 0,
+        "safe_actions_admitted_before_resolution": 4,
+        "uncertainty_blast_radius": 4,
+        "mean_waiting_fanout": 3.6666666666666665,
+        "irrelevant_wait_action_rounds": 0
+      },
+      "trace_file": "payment_fanout__late_commit__tct_c_joint_recertification.jsonl",
+      "input_hashes": [
+        "f2d6a70b1a300bc5f2e1bc39bb24f211ddfd818ad458b7892b9898cbc29de463",
+        "47e0e13e34d6384a2a95817b5ba5925cb3e93fb668ec79839089772f8bf3c4b0",
+        "74b81cbb2ab88b77a248ffefcd42a02b18b2db016b39f135566ef05d4f2fb15f",
+        "0bf2f211aaa618ca6a7455f857173c0dfa3ec10cec849f0f157f0525c84b3d5a"
+      ],
+      "max_candidate_calls_in_flight": 3
+    },
+    {
+      "scenario_id": "payment_fanout",
+      "realization": "late_commit",
+      "baseline": "agenttxn_oca",
+      "seed": 42,
+      "metrics": {
+        "decision_opportunities": 32,
+        "unsafe_admissions": 0,
+        "unsafe_admission_rate": 0.0,
+        "unsafe_actual_commits": 0,
+        "unsafe_commit_rate": 0.0,
+        "actual_candidate_commits": 6,
+        "physical_violation_events": 0,
+        "physical_state_checks": 10,
+        "invariant_violation_rate": 0.0,
+        "duplicate_effects": 0,
+        "duplicate_effect_rate": 0.0,
+        "irrecoverable_residue_events": 0,
+        "pre_resolution_safe_opportunities": 10,
+        "safe_opportunities_unnecessarily_blocked": 0,
+        "collateral_block_rate": 0.0,
+        "collateral_safe_actions_distinct": 0,
+        "safe_actions_admitted_before_resolution": 4,
+        "uncertainty_blast_radius": 4,
+        "mean_waiting_fanout": 3.6666666666666665,
+        "irrelevant_wait_action_rounds": 0
+      },
+      "trace_file": "payment_fanout__late_commit__agenttxn_oca.jsonl",
+      "input_hashes": [
+        "f2d6a70b1a300bc5f2e1bc39bb24f211ddfd818ad458b7892b9898cbc29de463",
+        "47e0e13e34d6384a2a95817b5ba5925cb3e93fb668ec79839089772f8bf3c4b0",
+        "74b81cbb2ab88b77a248ffefcd42a02b18b2db016b39f135566ef05d4f2fb15f",
+        "0bf2f211aaa618ca6a7455f857173c0dfa3ec10cec849f0f157f0525c84b3d5a"
+      ],
+      "max_candidate_calls_in_flight": 3
+    },
+    {
+      "scenario_id": "payment_fanout",
+      "realization": "terminal_abort",
+      "baseline": "global_fail_closed",
+      "seed": 42,
+      "metrics": {
+        "decision_opportunities": 32,
+        "unsafe_admissions": 0,
+        "unsafe_admission_rate": 0.0,
+        "unsafe_actual_commits": 0,
+        "unsafe_commit_rate": 0.0,
+        "actual_candidate_commits": 5,
+        "physical_violation_events": 0,
+        "physical_state_checks": 9,
+        "invariant_violation_rate": 0.0,
+        "duplicate_effects": 0,
+        "duplicate_effect_rate": 0.0,
+        "irrecoverable_residue_events": 0,
+        "pre_resolution_safe_opportunities": 10,
+        "safe_opportunities_unnecessarily_blocked": 10,
+        "collateral_block_rate": 1.0,
+        "collateral_safe_actions_distinct": 4,
+        "safe_actions_admitted_before_resolution": 0,
+        "uncertainty_blast_radius": 7,
+        "mean_waiting_fanout": 7.0,
+        "irrelevant_wait_action_rounds": 10
+      },
+      "trace_file": "payment_fanout__terminal_abort__global_fail_closed.jsonl",
+      "input_hashes": [
+        "f2d6a70b1a300bc5f2e1bc39bb24f211ddfd818ad458b7892b9898cbc29de463",
+        "47e0e13e34d6384a2a95817b5ba5925cb3e93fb668ec79839089772f8bf3c4b0",
+        "74b81cbb2ab88b77a248ffefcd42a02b18b2db016b39f135566ef05d4f2fb15f",
+        "d016598386a68bdcbd3bb73564a6199918520af24bec5d7055eb2a0ec1c21288"
+      ],
+      "max_candidate_calls_in_flight": 5
+    },
+    {
+      "scenario_id": "payment_fanout",
+      "realization": "terminal_abort",
+      "baseline": "synthetic_scope_occ",
+      "seed": 42,
+      "metrics": {
+        "decision_opportunities": 32,
+        "unsafe_admissions": 0,
+        "unsafe_admission_rate": 0.0,
+        "unsafe_actual_commits": 0,
+        "unsafe_commit_rate": 0.0,
+        "actual_candidate_commits": 5,
+        "physical_violation_events": 0,
+        "physical_state_checks": 9,
+        "invariant_violation_rate": 0.0,
+        "duplicate_effects": 0,
+        "duplicate_effect_rate": 0.0,
+        "irrecoverable_residue_events": 0,
+        "pre_resolution_safe_opportunities": 10,
+        "safe_opportunities_unnecessarily_blocked": 0,
+        "collateral_block_rate": 0.0,
+        "collateral_safe_actions_distinct": 0,
+        "safe_actions_admitted_before_resolution": 4,
+        "uncertainty_blast_radius": 4,
+        "mean_waiting_fanout": 3.6666666666666665,
+        "irrelevant_wait_action_rounds": 0
+      },
+      "trace_file": "payment_fanout__terminal_abort__synthetic_scope_occ.jsonl",
+      "input_hashes": [
+        "f2d6a70b1a300bc5f2e1bc39bb24f211ddfd818ad458b7892b9898cbc29de463",
+        "47e0e13e34d6384a2a95817b5ba5925cb3e93fb668ec79839089772f8bf3c4b0",
+        "74b81cbb2ab88b77a248ffefcd42a02b18b2db016b39f135566ef05d4f2fb15f",
+        "d016598386a68bdcbd3bb73564a6199918520af24bec5d7055eb2a0ec1c21288"
+      ],
+      "max_candidate_calls_in_flight": 3
+    },
+    {
+      "scenario_id": "payment_fanout",
+      "realization": "terminal_abort",
+      "baseline": "atomix_scope_frontier",
+      "seed": 42,
+      "metrics": {
+        "decision_opportunities": 32,
+        "unsafe_admissions": 0,
+        "unsafe_admission_rate": 0.0,
+        "unsafe_actual_commits": 0,
+        "unsafe_commit_rate": 0.0,
+        "actual_candidate_commits": 5,
+        "physical_violation_events": 0,
+        "physical_state_checks": 9,
+        "invariant_violation_rate": 0.0,
+        "duplicate_effects": 0,
+        "duplicate_effect_rate": 0.0,
+        "irrecoverable_residue_events": 0,
+        "pre_resolution_safe_opportunities": 10,
+        "safe_opportunities_unnecessarily_blocked": 0,
+        "collateral_block_rate": 0.0,
+        "collateral_safe_actions_distinct": 0,
+        "safe_actions_admitted_before_resolution": 4,
+        "uncertainty_blast_radius": 4,
+        "mean_waiting_fanout": 3.6666666666666665,
+        "irrelevant_wait_action_rounds": 0
+      },
+      "trace_file": "payment_fanout__terminal_abort__atomix_scope_frontier.jsonl",
+      "input_hashes": [
+        "f2d6a70b1a300bc5f2e1bc39bb24f211ddfd818ad458b7892b9898cbc29de463",
+        "47e0e13e34d6384a2a95817b5ba5925cb3e93fb668ec79839089772f8bf3c4b0",
+        "74b81cbb2ab88b77a248ffefcd42a02b18b2db016b39f135566ef05d4f2fb15f",
+        "d016598386a68bdcbd3bb73564a6199918520af24bec5d7055eb2a0ec1c21288"
+      ],
+      "max_candidate_calls_in_flight": 3
+    },
+    {
+      "scenario_id": "payment_fanout",
+      "realization": "terminal_abort",
+      "baseline": "semantic_pending_lock",
+      "seed": 42,
+      "metrics": {
+        "decision_opportunities": 32,
+        "unsafe_admissions": 0,
+        "unsafe_admission_rate": 0.0,
+        "unsafe_actual_commits": 0,
+        "unsafe_commit_rate": 0.0,
+        "actual_candidate_commits": 5,
+        "physical_violation_events": 0,
+        "physical_state_checks": 9,
+        "invariant_violation_rate": 0.0,
+        "duplicate_effects": 0,
+        "duplicate_effect_rate": 0.0,
+        "irrecoverable_residue_events": 0,
+        "pre_resolution_safe_opportunities": 10,
+        "safe_opportunities_unnecessarily_blocked": 0,
+        "collateral_block_rate": 0.0,
+        "collateral_safe_actions_distinct": 0,
+        "safe_actions_admitted_before_resolution": 4,
+        "uncertainty_blast_radius": 4,
+        "mean_waiting_fanout": 3.6666666666666665,
+        "irrelevant_wait_action_rounds": 0
+      },
+      "trace_file": "payment_fanout__terminal_abort__semantic_pending_lock.jsonl",
+      "input_hashes": [
+        "f2d6a70b1a300bc5f2e1bc39bb24f211ddfd818ad458b7892b9898cbc29de463",
+        "47e0e13e34d6384a2a95817b5ba5925cb3e93fb668ec79839089772f8bf3c4b0",
+        "74b81cbb2ab88b77a248ffefcd42a02b18b2db016b39f135566ef05d4f2fb15f",
+        "d016598386a68bdcbd3bb73564a6199918520af24bec5d7055eb2a0ec1c21288"
+      ],
+      "max_candidate_calls_in_flight": 3
+    },
+    {
+      "scenario_id": "payment_fanout",
+      "realization": "terminal_abort",
+      "baseline": "tct_c_joint_recertification",
+      "seed": 42,
+      "metrics": {
+        "decision_opportunities": 32,
+        "unsafe_admissions": 0,
+        "unsafe_admission_rate": 0.0,
+        "unsafe_actual_commits": 0,
+        "unsafe_commit_rate": 0.0,
+        "actual_candidate_commits": 5,
+        "physical_violation_events": 0,
+        "physical_state_checks": 9,
+        "invariant_violation_rate": 0.0,
+        "duplicate_effects": 0,
+        "duplicate_effect_rate": 0.0,
+        "irrecoverable_residue_events": 0,
+        "pre_resolution_safe_opportunities": 10,
+        "safe_opportunities_unnecessarily_blocked": 0,
+        "collateral_block_rate": 0.0,
+        "collateral_safe_actions_distinct": 0,
+        "safe_actions_admitted_before_resolution": 4,
+        "uncertainty_blast_radius": 4,
+        "mean_waiting_fanout": 3.6666666666666665,
+        "irrelevant_wait_action_rounds": 0
+      },
+      "trace_file": "payment_fanout__terminal_abort__tct_c_joint_recertification.jsonl",
+      "input_hashes": [
+        "f2d6a70b1a300bc5f2e1bc39bb24f211ddfd818ad458b7892b9898cbc29de463",
+        "47e0e13e34d6384a2a95817b5ba5925cb3e93fb668ec79839089772f8bf3c4b0",
+        "74b81cbb2ab88b77a248ffefcd42a02b18b2db016b39f135566ef05d4f2fb15f",
+        "d016598386a68bdcbd3bb73564a6199918520af24bec5d7055eb2a0ec1c21288"
+      ],
+      "max_candidate_calls_in_flight": 3
+    },
+    {
+      "scenario_id": "payment_fanout",
+      "realization": "terminal_abort",
+      "baseline": "agenttxn_oca",
+      "seed": 42,
+      "metrics": {
+        "decision_opportunities": 32,
+        "unsafe_admissions": 0,
+        "unsafe_admission_rate": 0.0,
+        "unsafe_actual_commits": 0,
+        "unsafe_commit_rate": 0.0,
+        "actual_candidate_commits": 5,
+        "physical_violation_events": 0,
+        "physical_state_checks": 9,
+        "invariant_violation_rate": 0.0,
+        "duplicate_effects": 0,
+        "duplicate_effect_rate": 0.0,
+        "irrecoverable_residue_events": 0,
+        "pre_resolution_safe_opportunities": 10,
+        "safe_opportunities_unnecessarily_blocked": 0,
+        "collateral_block_rate": 0.0,
+        "collateral_safe_actions_distinct": 0,
+        "safe_actions_admitted_before_resolution": 4,
+        "uncertainty_blast_radius": 4,
+        "mean_waiting_fanout": 3.6666666666666665,
+        "irrelevant_wait_action_rounds": 0
+      },
+      "trace_file": "payment_fanout__terminal_abort__agenttxn_oca.jsonl",
+      "input_hashes": [
+        "f2d6a70b1a300bc5f2e1bc39bb24f211ddfd818ad458b7892b9898cbc29de463",
+        "47e0e13e34d6384a2a95817b5ba5925cb3e93fb668ec79839089772f8bf3c4b0",
+        "74b81cbb2ab88b77a248ffefcd42a02b18b2db016b39f135566ef05d4f2fb15f",
+        "d016598386a68bdcbd3bb73564a6199918520af24bec5d7055eb2a0ec1c21288"
+      ],
+      "max_candidate_calls_in_flight": 3
+    },
+    {
+      "scenario_id": "refund_cross_workflow",
+      "realization": "hidden_committed",
+      "baseline": "global_fail_closed",
+      "seed": 42,
+      "metrics": {
+        "decision_opportunities": 32,
+        "unsafe_admissions": 0,
+        "unsafe_admission_rate": 0.0,
+        "unsafe_actual_commits": 0,
+        "unsafe_commit_rate": 0.0,
+        "actual_candidate_commits": 6,
+        "physical_violation_events": 0,
+        "physical_state_checks": 10,
+        "invariant_violation_rate": 0.0,
+        "duplicate_effects": 0,
+        "duplicate_effect_rate": 0.0,
+        "irrecoverable_residue_events": 0,
+        "pre_resolution_safe_opportunities": 13,
+        "safe_opportunities_unnecessarily_blocked": 13,
+        "collateral_block_rate": 1.0,
+        "collateral_safe_actions_distinct": 5,
+        "safe_actions_admitted_before_resolution": 0,
+        "uncertainty_blast_radius": 7,
+        "mean_waiting_fanout": 7.0,
+        "irrelevant_wait_action_rounds": 13
+      },
+      "trace_file": "refund_cross_workflow__hidden_committed__global_fail_closed.jsonl",
+      "input_hashes": [
+        "45910257bb02ef7f5df386d273279711e3e40b76f499dc8834ba7f0e888b78c1",
+        "d7a40ff3c192efb80969e62ccad61645cbb732571f07dae92d301ee27995f427",
+        "78daafb8b06d3b01fbb32a30d0d9ab434b8fed28dc37d964b7af508732002058",
+        "2827beb9a15f9afc55ba958e2b77af48d2cad0aed1f659f0514b12571a83ad3a"
+      ],
+      "max_candidate_calls_in_flight": 6
+    },
+    {
+      "scenario_id": "refund_cross_workflow",
+      "realization": "hidden_committed",
+      "baseline": "synthetic_scope_occ",
+      "seed": 42,
+      "metrics": {
+        "decision_opportunities": 32,
+        "unsafe_admissions": 0,
+        "unsafe_admission_rate": 0.0,
+        "unsafe_actual_commits": 0,
+        "unsafe_commit_rate": 0.0,
+        "actual_candidate_commits": 6,
+        "physical_violation_events": 0,
+        "physical_state_checks": 10,
+        "invariant_violation_rate": 0.0,
+        "duplicate_effects": 0,
+        "duplicate_effect_rate": 0.0,
+        "irrecoverable_residue_events": 0,
+        "pre_resolution_safe_opportunities": 13,
+        "safe_opportunities_unnecessarily_blocked": 0,
+        "collateral_block_rate": 0.0,
+        "collateral_safe_actions_distinct": 0,
+        "safe_actions_admitted_before_resolution": 5,
+        "uncertainty_blast_radius": 3,
+        "mean_waiting_fanout": 2.6666666666666665,
+        "irrelevant_wait_action_rounds": 0
+      },
+      "trace_file": "refund_cross_workflow__hidden_committed__synthetic_scope_occ.jsonl",
+      "input_hashes": [
+        "45910257bb02ef7f5df386d273279711e3e40b76f499dc8834ba7f0e888b78c1",
+        "d7a40ff3c192efb80969e62ccad61645cbb732571f07dae92d301ee27995f427",
+        "78daafb8b06d3b01fbb32a30d0d9ab434b8fed28dc37d964b7af508732002058",
+        "2827beb9a15f9afc55ba958e2b77af48d2cad0aed1f659f0514b12571a83ad3a"
+      ],
+      "max_candidate_calls_in_flight": 4
+    },
+    {
+      "scenario_id": "refund_cross_workflow",
+      "realization": "hidden_committed",
+      "baseline": "atomix_scope_frontier",
+      "seed": 42,
+      "metrics": {
+        "decision_opportunities": 32,
+        "unsafe_admissions": 0,
+        "unsafe_admission_rate": 0.0,
+        "unsafe_actual_commits": 0,
+        "unsafe_commit_rate": 0.0,
+        "actual_candidate_commits": 6,
+        "physical_violation_events": 0,
+        "physical_state_checks": 10,
+        "invariant_violation_rate": 0.0,
+        "duplicate_effects": 0,
+        "duplicate_effect_rate": 0.0,
+        "irrecoverable_residue_events": 0,
+        "pre_resolution_safe_opportunities": 13,
+        "safe_opportunities_unnecessarily_blocked": 0,
+        "collateral_block_rate": 0.0,
+        "collateral_safe_actions_distinct": 0,
+        "safe_actions_admitted_before_resolution": 5,
+        "uncertainty_blast_radius": 3,
+        "mean_waiting_fanout": 2.6666666666666665,
+        "irrelevant_wait_action_rounds": 0
+      },
+      "trace_file": "refund_cross_workflow__hidden_committed__atomix_scope_frontier.jsonl",
+      "input_hashes": [
+        "45910257bb02ef7f5df386d273279711e3e40b76f499dc8834ba7f0e888b78c1",
+        "d7a40ff3c192efb80969e62ccad61645cbb732571f07dae92d301ee27995f427",
+        "78daafb8b06d3b01fbb32a30d0d9ab434b8fed28dc37d964b7af508732002058",
+        "2827beb9a15f9afc55ba958e2b77af48d2cad0aed1f659f0514b12571a83ad3a"
+      ],
+      "max_candidate_calls_in_flight": 4
+    },
+    {
+      "scenario_id": "refund_cross_workflow",
+      "realization": "hidden_committed",
+      "baseline": "semantic_pending_lock",
+      "seed": 42,
+      "metrics": {
+        "decision_opportunities": 32,
+        "unsafe_admissions": 0,
+        "unsafe_admission_rate": 0.0,
+        "unsafe_actual_commits": 0,
+        "unsafe_commit_rate": 0.0,
+        "actual_candidate_commits": 6,
+        "physical_violation_events": 0,
+        "physical_state_checks": 10,
+        "invariant_violation_rate": 0.0,
+        "duplicate_effects": 0,
+        "duplicate_effect_rate": 0.0,
+        "irrecoverable_residue_events": 0,
+        "pre_resolution_safe_opportunities": 13,
+        "safe_opportunities_unnecessarily_blocked": 0,
+        "collateral_block_rate": 0.0,
+        "collateral_safe_actions_distinct": 0,
+        "safe_actions_admitted_before_resolution": 5,
+        "uncertainty_blast_radius": 3,
+        "mean_waiting_fanout": 2.6666666666666665,
+        "irrelevant_wait_action_rounds": 0
+      },
+      "trace_file": "refund_cross_workflow__hidden_committed__semantic_pending_lock.jsonl",
+      "input_hashes": [
+        "45910257bb02ef7f5df386d273279711e3e40b76f499dc8834ba7f0e888b78c1",
+        "d7a40ff3c192efb80969e62ccad61645cbb732571f07dae92d301ee27995f427",
+        "78daafb8b06d3b01fbb32a30d0d9ab434b8fed28dc37d964b7af508732002058",
+        "2827beb9a15f9afc55ba958e2b77af48d2cad0aed1f659f0514b12571a83ad3a"
+      ],
+      "max_candidate_calls_in_flight": 4
+    },
+    {
+      "scenario_id": "refund_cross_workflow",
+      "realization": "hidden_committed",
+      "baseline": "tct_c_joint_recertification",
+      "seed": 42,
+      "metrics": {
+        "decision_opportunities": 32,
+        "unsafe_admissions": 0,
+        "unsafe_admission_rate": 0.0,
+        "unsafe_actual_commits": 0,
+        "unsafe_commit_rate": 0.0,
+        "actual_candidate_commits": 6,
+        "physical_violation_events": 0,
+        "physical_state_checks": 10,
+        "invariant_violation_rate": 0.0,
+        "duplicate_effects": 0,
+        "duplicate_effect_rate": 0.0,
+        "irrecoverable_residue_events": 0,
+        "pre_resolution_safe_opportunities": 13,
+        "safe_opportunities_unnecessarily_blocked": 0,
+        "collateral_block_rate": 0.0,
+        "collateral_safe_actions_distinct": 0,
+        "safe_actions_admitted_before_resolution": 5,
+        "uncertainty_blast_radius": 3,
+        "mean_waiting_fanout": 2.6666666666666665,
+        "irrelevant_wait_action_rounds": 0
+      },
+      "trace_file": "refund_cross_workflow__hidden_committed__tct_c_joint_recertification.jsonl",
+      "input_hashes": [
+        "45910257bb02ef7f5df386d273279711e3e40b76f499dc8834ba7f0e888b78c1",
+        "d7a40ff3c192efb80969e62ccad61645cbb732571f07dae92d301ee27995f427",
+        "78daafb8b06d3b01fbb32a30d0d9ab434b8fed28dc37d964b7af508732002058",
+        "2827beb9a15f9afc55ba958e2b77af48d2cad0aed1f659f0514b12571a83ad3a"
+      ],
+      "max_candidate_calls_in_flight": 4
+    },
+    {
+      "scenario_id": "refund_cross_workflow",
+      "realization": "hidden_committed",
+      "baseline": "agenttxn_oca",
+      "seed": 42,
+      "metrics": {
+        "decision_opportunities": 32,
+        "unsafe_admissions": 0,
+        "unsafe_admission_rate": 0.0,
+        "unsafe_actual_commits": 0,
+        "unsafe_commit_rate": 0.0,
+        "actual_candidate_commits": 6,
+        "physical_violation_events": 0,
+        "physical_state_checks": 10,
+        "invariant_violation_rate": 0.0,
+        "duplicate_effects": 0,
+        "duplicate_effect_rate": 0.0,
+        "irrecoverable_residue_events": 0,
+        "pre_resolution_safe_opportunities": 13,
+        "safe_opportunities_unnecessarily_blocked": 0,
+        "collateral_block_rate": 0.0,
+        "collateral_safe_actions_distinct": 0,
+        "safe_actions_admitted_before_resolution": 5,
+        "uncertainty_blast_radius": 3,
+        "mean_waiting_fanout": 2.6666666666666665,
+        "irrelevant_wait_action_rounds": 0
+      },
+      "trace_file": "refund_cross_workflow__hidden_committed__agenttxn_oca.jsonl",
+      "input_hashes": [
+        "45910257bb02ef7f5df386d273279711e3e40b76f499dc8834ba7f0e888b78c1",
+        "d7a40ff3c192efb80969e62ccad61645cbb732571f07dae92d301ee27995f427",
+        "78daafb8b06d3b01fbb32a30d0d9ab434b8fed28dc37d964b7af508732002058",
+        "2827beb9a15f9afc55ba958e2b77af48d2cad0aed1f659f0514b12571a83ad3a"
+      ],
+      "max_candidate_calls_in_flight": 4
+    },
+    {
+      "scenario_id": "refund_cross_workflow",
+      "realization": "hidden_absent",
+      "baseline": "global_fail_closed",
+      "seed": 42,
+      "metrics": {
+        "decision_opportunities": 32,
+        "unsafe_admissions": 0,
+        "unsafe_admission_rate": 0.0,
+        "unsafe_actual_commits": 0,
+        "unsafe_commit_rate": 0.0,
+        "actual_candidate_commits": 6,
+        "physical_violation_events": 0,
+        "physical_state_checks": 10,
+        "invariant_violation_rate": 0.0,
+        "duplicate_effects": 0,
+        "duplicate_effect_rate": 0.0,
+        "irrecoverable_residue_events": 0,
+        "pre_resolution_safe_opportunities": 13,
+        "safe_opportunities_unnecessarily_blocked": 13,
+        "collateral_block_rate": 1.0,
+        "collateral_safe_actions_distinct": 5,
+        "safe_actions_admitted_before_resolution": 0,
+        "uncertainty_blast_radius": 7,
+        "mean_waiting_fanout": 7.0,
+        "irrelevant_wait_action_rounds": 13
+      },
+      "trace_file": "refund_cross_workflow__hidden_absent__global_fail_closed.jsonl",
+      "input_hashes": [
+        "45910257bb02ef7f5df386d273279711e3e40b76f499dc8834ba7f0e888b78c1",
+        "d7a40ff3c192efb80969e62ccad61645cbb732571f07dae92d301ee27995f427",
+        "78daafb8b06d3b01fbb32a30d0d9ab434b8fed28dc37d964b7af508732002058",
+        "bf70ac2627c7c5d4a1accf9fb4f91d3d19c7355f35c0a9f224bc3b5b220062e6"
+      ],
+      "max_candidate_calls_in_flight": 6
+    },
+    {
+      "scenario_id": "refund_cross_workflow",
+      "realization": "hidden_absent",
+      "baseline": "synthetic_scope_occ",
+      "seed": 42,
+      "metrics": {
+        "decision_opportunities": 32,
+        "unsafe_admissions": 0,
+        "unsafe_admission_rate": 0.0,
+        "unsafe_actual_commits": 0,
+        "unsafe_commit_rate": 0.0,
+        "actual_candidate_commits": 6,
+        "physical_violation_events": 0,
+        "physical_state_checks": 10,
+        "invariant_violation_rate": 0.0,
+        "duplicate_effects": 0,
+        "duplicate_effect_rate": 0.0,
+        "irrecoverable_residue_events": 0,
+        "pre_resolution_safe_opportunities": 13,
+        "safe_opportunities_unnecessarily_blocked": 0,
+        "collateral_block_rate": 0.0,
+        "collateral_safe_actions_distinct": 0,
+        "safe_actions_admitted_before_resolution": 5,
+        "uncertainty_blast_radius": 3,
+        "mean_waiting_fanout": 2.6666666666666665,
+        "irrelevant_wait_action_rounds": 0
+      },
+      "trace_file": "refund_cross_workflow__hidden_absent__synthetic_scope_occ.jsonl",
+      "input_hashes": [
+        "45910257bb02ef7f5df386d273279711e3e40b76f499dc8834ba7f0e888b78c1",
+        "d7a40ff3c192efb80969e62ccad61645cbb732571f07dae92d301ee27995f427",
+        "78daafb8b06d3b01fbb32a30d0d9ab434b8fed28dc37d964b7af508732002058",
+        "bf70ac2627c7c5d4a1accf9fb4f91d3d19c7355f35c0a9f224bc3b5b220062e6"
+      ],
+      "max_candidate_calls_in_flight": 4
+    },
+    {
+      "scenario_id": "refund_cross_workflow",
+      "realization": "hidden_absent",
+      "baseline": "atomix_scope_frontier",
+      "seed": 42,
+      "metrics": {
+        "decision_opportunities": 32,
+        "unsafe_admissions": 0,
+        "unsafe_admission_rate": 0.0,
+        "unsafe_actual_commits": 0,
+        "unsafe_commit_rate": 0.0,
+        "actual_candidate_commits": 6,
+        "physical_violation_events": 0,
+        "physical_state_checks": 10,
+        "invariant_violation_rate": 0.0,
+        "duplicate_effects": 0,
+        "duplicate_effect_rate": 0.0,
+        "irrecoverable_residue_events": 0,
+        "pre_resolution_safe_opportunities": 13,
+        "safe_opportunities_unnecessarily_blocked": 0,
+        "collateral_block_rate": 0.0,
+        "collateral_safe_actions_distinct": 0,
+        "safe_actions_admitted_before_resolution": 5,
+        "uncertainty_blast_radius": 3,
+        "mean_waiting_fanout": 2.6666666666666665,
+        "irrelevant_wait_action_rounds": 0
+      },
+      "trace_file": "refund_cross_workflow__hidden_absent__atomix_scope_frontier.jsonl",
+      "input_hashes": [
+        "45910257bb02ef7f5df386d273279711e3e40b76f499dc8834ba7f0e888b78c1",
+        "d7a40ff3c192efb80969e62ccad61645cbb732571f07dae92d301ee27995f427",
+        "78daafb8b06d3b01fbb32a30d0d9ab434b8fed28dc37d964b7af508732002058",
+        "bf70ac2627c7c5d4a1accf9fb4f91d3d19c7355f35c0a9f224bc3b5b220062e6"
+      ],
+      "max_candidate_calls_in_flight": 4
+    },
+    {
+      "scenario_id": "refund_cross_workflow",
+      "realization": "hidden_absent",
+      "baseline": "semantic_pending_lock",
+      "seed": 42,
+      "metrics": {
+        "decision_opportunities": 32,
+        "unsafe_admissions": 0,
+        "unsafe_admission_rate": 0.0,
+        "unsafe_actual_commits": 0,
+        "unsafe_commit_rate": 0.0,
+        "actual_candidate_commits": 6,
+        "physical_violation_events": 0,
+        "physical_state_checks": 10,
+        "invariant_violation_rate": 0.0,
+        "duplicate_effects": 0,
+        "duplicate_effect_rate": 0.0,
+        "irrecoverable_residue_events": 0,
+        "pre_resolution_safe_opportunities": 13,
+        "safe_opportunities_unnecessarily_blocked": 0,
+        "collateral_block_rate": 0.0,
+        "collateral_safe_actions_distinct": 0,
+        "safe_actions_admitted_before_resolution": 5,
+        "uncertainty_blast_radius": 3,
+        "mean_waiting_fanout": 2.6666666666666665,
+        "irrelevant_wait_action_rounds": 0
+      },
+      "trace_file": "refund_cross_workflow__hidden_absent__semantic_pending_lock.jsonl",
+      "input_hashes": [
+        "45910257bb02ef7f5df386d273279711e3e40b76f499dc8834ba7f0e888b78c1",
+        "d7a40ff3c192efb80969e62ccad61645cbb732571f07dae92d301ee27995f427",
+        "78daafb8b06d3b01fbb32a30d0d9ab434b8fed28dc37d964b7af508732002058",
+        "bf70ac2627c7c5d4a1accf9fb4f91d3d19c7355f35c0a9f224bc3b5b220062e6"
+      ],
+      "max_candidate_calls_in_flight": 4
+    },
+    {
+      "scenario_id": "refund_cross_workflow",
+      "realization": "hidden_absent",
+      "baseline": "tct_c_joint_recertification",
+      "seed": 42,
+      "metrics": {
+        "decision_opportunities": 32,
+        "unsafe_admissions": 0,
+        "unsafe_admission_rate": 0.0,
+        "unsafe_actual_commits": 0,
+        "unsafe_commit_rate": 0.0,
+        "actual_candidate_commits": 6,
+        "physical_violation_events": 0,
+        "physical_state_checks": 10,
+        "invariant_violation_rate": 0.0,
+        "duplicate_effects": 0,
+        "duplicate_effect_rate": 0.0,
+        "irrecoverable_residue_events": 0,
+        "pre_resolution_safe_opportunities": 13,
+        "safe_opportunities_unnecessarily_blocked": 0,
+        "collateral_block_rate": 0.0,
+        "collateral_safe_actions_distinct": 0,
+        "safe_actions_admitted_before_resolution": 5,
+        "uncertainty_blast_radius": 3,
+        "mean_waiting_fanout": 2.6666666666666665,
+        "irrelevant_wait_action_rounds": 0
+      },
+      "trace_file": "refund_cross_workflow__hidden_absent__tct_c_joint_recertification.jsonl",
+      "input_hashes": [
+        "45910257bb02ef7f5df386d273279711e3e40b76f499dc8834ba7f0e888b78c1",
+        "d7a40ff3c192efb80969e62ccad61645cbb732571f07dae92d301ee27995f427",
+        "78daafb8b06d3b01fbb32a30d0d9ab434b8fed28dc37d964b7af508732002058",
+        "bf70ac2627c7c5d4a1accf9fb4f91d3d19c7355f35c0a9f224bc3b5b220062e6"
+      ],
+      "max_candidate_calls_in_flight": 4
+    },
+    {
+      "scenario_id": "refund_cross_workflow",
+      "realization": "hidden_absent",
+      "baseline": "agenttxn_oca",
+      "seed": 42,
+      "metrics": {
+        "decision_opportunities": 32,
+        "unsafe_admissions": 0,
+        "unsafe_admission_rate": 0.0,
+        "unsafe_actual_commits": 0,
+        "unsafe_commit_rate": 0.0,
+        "actual_candidate_commits": 6,
+        "physical_violation_events": 0,
+        "physical_state_checks": 10,
+        "invariant_violation_rate": 0.0,
+        "duplicate_effects": 0,
+        "duplicate_effect_rate": 0.0,
+        "irrecoverable_residue_events": 0,
+        "pre_resolution_safe_opportunities": 13,
+        "safe_opportunities_unnecessarily_blocked": 0,
+        "collateral_block_rate": 0.0,
+        "collateral_safe_actions_distinct": 0,
+        "safe_actions_admitted_before_resolution": 5,
+        "uncertainty_blast_radius": 3,
+        "mean_waiting_fanout": 2.6666666666666665,
+        "irrelevant_wait_action_rounds": 0
+      },
+      "trace_file": "refund_cross_workflow__hidden_absent__agenttxn_oca.jsonl",
+      "input_hashes": [
+        "45910257bb02ef7f5df386d273279711e3e40b76f499dc8834ba7f0e888b78c1",
+        "d7a40ff3c192efb80969e62ccad61645cbb732571f07dae92d301ee27995f427",
+        "78daafb8b06d3b01fbb32a30d0d9ab434b8fed28dc37d964b7af508732002058",
+        "bf70ac2627c7c5d4a1accf9fb4f91d3d19c7355f35c0a9f224bc3b5b220062e6"
+      ],
+      "max_candidate_calls_in_flight": 4
+    },
+    {
+      "scenario_id": "refund_cross_workflow",
+      "realization": "late_commit",
+      "baseline": "global_fail_closed",
+      "seed": 42,
+      "metrics": {
+        "decision_opportunities": 32,
+        "unsafe_admissions": 0,
+        "unsafe_admission_rate": 0.0,
+        "unsafe_actual_commits": 0,
+        "unsafe_commit_rate": 0.0,
+        "actual_candidate_commits": 6,
+        "physical_violation_events": 0,
+        "physical_state_checks": 10,
+        "invariant_violation_rate": 0.0,
+        "duplicate_effects": 0,
+        "duplicate_effect_rate": 0.0,
+        "irrecoverable_residue_events": 0,
+        "pre_resolution_safe_opportunities": 13,
+        "safe_opportunities_unnecessarily_blocked": 13,
+        "collateral_block_rate": 1.0,
+        "collateral_safe_actions_distinct": 5,
+        "safe_actions_admitted_before_resolution": 0,
+        "uncertainty_blast_radius": 7,
+        "mean_waiting_fanout": 7.0,
+        "irrelevant_wait_action_rounds": 13
+      },
+      "trace_file": "refund_cross_workflow__late_commit__global_fail_closed.jsonl",
+      "input_hashes": [
+        "45910257bb02ef7f5df386d273279711e3e40b76f499dc8834ba7f0e888b78c1",
+        "d7a40ff3c192efb80969e62ccad61645cbb732571f07dae92d301ee27995f427",
+        "78daafb8b06d3b01fbb32a30d0d9ab434b8fed28dc37d964b7af508732002058",
+        "2827beb9a15f9afc55ba958e2b77af48d2cad0aed1f659f0514b12571a83ad3a"
+      ],
+      "max_candidate_calls_in_flight": 6
+    },
+    {
+      "scenario_id": "refund_cross_workflow",
+      "realization": "late_commit",
+      "baseline": "synthetic_scope_occ",
+      "seed": 42,
+      "metrics": {
+        "decision_opportunities": 32,
+        "unsafe_admissions": 0,
+        "unsafe_admission_rate": 0.0,
+        "unsafe_actual_commits": 0,
+        "unsafe_commit_rate": 0.0,
+        "actual_candidate_commits": 6,
+        "physical_violation_events": 0,
+        "physical_state_checks": 10,
+        "invariant_violation_rate": 0.0,
+        "duplicate_effects": 0,
+        "duplicate_effect_rate": 0.0,
+        "irrecoverable_residue_events": 0,
+        "pre_resolution_safe_opportunities": 13,
+        "safe_opportunities_unnecessarily_blocked": 0,
+        "collateral_block_rate": 0.0,
+        "collateral_safe_actions_distinct": 0,
+        "safe_actions_admitted_before_resolution": 5,
+        "uncertainty_blast_radius": 3,
+        "mean_waiting_fanout": 2.6666666666666665,
+        "irrelevant_wait_action_rounds": 0
+      },
+      "trace_file": "refund_cross_workflow__late_commit__synthetic_scope_occ.jsonl",
+      "input_hashes": [
+        "45910257bb02ef7f5df386d273279711e3e40b76f499dc8834ba7f0e888b78c1",
+        "d7a40ff3c192efb80969e62ccad61645cbb732571f07dae92d301ee27995f427",
+        "78daafb8b06d3b01fbb32a30d0d9ab434b8fed28dc37d964b7af508732002058",
+        "2827beb9a15f9afc55ba958e2b77af48d2cad0aed1f659f0514b12571a83ad3a"
+      ],
+      "max_candidate_calls_in_flight": 4
+    },
+    {
+      "scenario_id": "refund_cross_workflow",
+      "realization": "late_commit",
+      "baseline": "atomix_scope_frontier",
+      "seed": 42,
+      "metrics": {
+        "decision_opportunities": 32,
+        "unsafe_admissions": 0,
+        "unsafe_admission_rate": 0.0,
+        "unsafe_actual_commits": 0,
+        "unsafe_commit_rate": 0.0,
+        "actual_candidate_commits": 6,
+        "physical_violation_events": 0,
+        "physical_state_checks": 10,
+        "invariant_violation_rate": 0.0,
+        "duplicate_effects": 0,
+        "duplicate_effect_rate": 0.0,
+        "irrecoverable_residue_events": 0,
+        "pre_resolution_safe_opportunities": 13,
+        "safe_opportunities_unnecessarily_blocked": 0,
+        "collateral_block_rate": 0.0,
+        "collateral_safe_actions_distinct": 0,
+        "safe_actions_admitted_before_resolution": 5,
+        "uncertainty_blast_radius": 3,
+        "mean_waiting_fanout": 2.6666666666666665,
+        "irrelevant_wait_action_rounds": 0
+      },
+      "trace_file": "refund_cross_workflow__late_commit__atomix_scope_frontier.jsonl",
+      "input_hashes": [
+        "45910257bb02ef7f5df386d273279711e3e40b76f499dc8834ba7f0e888b78c1",
+        "d7a40ff3c192efb80969e62ccad61645cbb732571f07dae92d301ee27995f427",
+        "78daafb8b06d3b01fbb32a30d0d9ab434b8fed28dc37d964b7af508732002058",
+        "2827beb9a15f9afc55ba958e2b77af48d2cad0aed1f659f0514b12571a83ad3a"
+      ],
+      "max_candidate_calls_in_flight": 4
+    },
+    {
+      "scenario_id": "refund_cross_workflow",
+      "realization": "late_commit",
+      "baseline": "semantic_pending_lock",
+      "seed": 42,
+      "metrics": {
+        "decision_opportunities": 32,
+        "unsafe_admissions": 0,
+        "unsafe_admission_rate": 0.0,
+        "unsafe_actual_commits": 0,
+        "unsafe_commit_rate": 0.0,
+        "actual_candidate_commits": 6,
+        "physical_violation_events": 0,
+        "physical_state_checks": 10,
+        "invariant_violation_rate": 0.0,
+        "duplicate_effects": 0,
+        "duplicate_effect_rate": 0.0,
+        "irrecoverable_residue_events": 0,
+        "pre_resolution_safe_opportunities": 13,
+        "safe_opportunities_unnecessarily_blocked": 0,
+        "collateral_block_rate": 0.0,
+        "collateral_safe_actions_distinct": 0,
+        "safe_actions_admitted_before_resolution": 5,
+        "uncertainty_blast_radius": 3,
+        "mean_waiting_fanout": 2.6666666666666665,
+        "irrelevant_wait_action_rounds": 0
+      },
+      "trace_file": "refund_cross_workflow__late_commit__semantic_pending_lock.jsonl",
+      "input_hashes": [
+        "45910257bb02ef7f5df386d273279711e3e40b76f499dc8834ba7f0e888b78c1",
+        "d7a40ff3c192efb80969e62ccad61645cbb732571f07dae92d301ee27995f427",
+        "78daafb8b06d3b01fbb32a30d0d9ab434b8fed28dc37d964b7af508732002058",
+        "2827beb9a15f9afc55ba958e2b77af48d2cad0aed1f659f0514b12571a83ad3a"
+      ],
+      "max_candidate_calls_in_flight": 4
+    },
+    {
+      "scenario_id": "refund_cross_workflow",
+      "realization": "late_commit",
+      "baseline": "tct_c_joint_recertification",
+      "seed": 42,
+      "metrics": {
+        "decision_opportunities": 32,
+        "unsafe_admissions": 0,
+        "unsafe_admission_rate": 0.0,
+        "unsafe_actual_commits": 0,
+        "unsafe_commit_rate": 0.0,
+        "actual_candidate_commits": 6,
+        "physical_violation_events": 0,
+        "physical_state_checks": 10,
+        "invariant_violation_rate": 0.0,
+        "duplicate_effects": 0,
+        "duplicate_effect_rate": 0.0,
+        "irrecoverable_residue_events": 0,
+        "pre_resolution_safe_opportunities": 13,
+        "safe_opportunities_unnecessarily_blocked": 0,
+        "collateral_block_rate": 0.0,
+        "collateral_safe_actions_distinct": 0,
+        "safe_actions_admitted_before_resolution": 5,
+        "uncertainty_blast_radius": 3,
+        "mean_waiting_fanout": 2.6666666666666665,
+        "irrelevant_wait_action_rounds": 0
+      },
+      "trace_file": "refund_cross_workflow__late_commit__tct_c_joint_recertification.jsonl",
+      "input_hashes": [
+        "45910257bb02ef7f5df386d273279711e3e40b76f499dc8834ba7f0e888b78c1",
+        "d7a40ff3c192efb80969e62ccad61645cbb732571f07dae92d301ee27995f427",
+        "78daafb8b06d3b01fbb32a30d0d9ab434b8fed28dc37d964b7af508732002058",
+        "2827beb9a15f9afc55ba958e2b77af48d2cad0aed1f659f0514b12571a83ad3a"
+      ],
+      "max_candidate_calls_in_flight": 4
+    },
+    {
+      "scenario_id": "refund_cross_workflow",
+      "realization": "late_commit",
+      "baseline": "agenttxn_oca",
+      "seed": 42,
+      "metrics": {
+        "decision_opportunities": 32,
+        "unsafe_admissions": 0,
+        "unsafe_admission_rate": 0.0,
+        "unsafe_actual_commits": 0,
+        "unsafe_commit_rate": 0.0,
+        "actual_candidate_commits": 6,
+        "physical_violation_events": 0,
+        "physical_state_checks": 10,
+        "invariant_violation_rate": 0.0,
+        "duplicate_effects": 0,
+        "duplicate_effect_rate": 0.0,
+        "irrecoverable_residue_events": 0,
+        "pre_resolution_safe_opportunities": 13,
+        "safe_opportunities_unnecessarily_blocked": 0,
+        "collateral_block_rate": 0.0,
+        "collateral_safe_actions_distinct": 0,
+        "safe_actions_admitted_before_resolution": 5,
+        "uncertainty_blast_radius": 3,
+        "mean_waiting_fanout": 2.6666666666666665,
+        "irrelevant_wait_action_rounds": 0
+      },
+      "trace_file": "refund_cross_workflow__late_commit__agenttxn_oca.jsonl",
+      "input_hashes": [
+        "45910257bb02ef7f5df386d273279711e3e40b76f499dc8834ba7f0e888b78c1",
+        "d7a40ff3c192efb80969e62ccad61645cbb732571f07dae92d301ee27995f427",
+        "78daafb8b06d3b01fbb32a30d0d9ab434b8fed28dc37d964b7af508732002058",
+        "2827beb9a15f9afc55ba958e2b77af48d2cad0aed1f659f0514b12571a83ad3a"
+      ],
+      "max_candidate_calls_in_flight": 4
+    },
+    {
+      "scenario_id": "refund_cross_workflow",
+      "realization": "terminal_abort",
+      "baseline": "global_fail_closed",
+      "seed": 42,
+      "metrics": {
+        "decision_opportunities": 32,
+        "unsafe_admissions": 0,
+        "unsafe_admission_rate": 0.0,
+        "unsafe_actual_commits": 0,
+        "unsafe_commit_rate": 0.0,
+        "actual_candidate_commits": 6,
+        "physical_violation_events": 0,
+        "physical_state_checks": 10,
+        "invariant_violation_rate": 0.0,
+        "duplicate_effects": 0,
+        "duplicate_effect_rate": 0.0,
+        "irrecoverable_residue_events": 0,
+        "pre_resolution_safe_opportunities": 13,
+        "safe_opportunities_unnecessarily_blocked": 13,
+        "collateral_block_rate": 1.0,
+        "collateral_safe_actions_distinct": 5,
+        "safe_actions_admitted_before_resolution": 0,
+        "uncertainty_blast_radius": 7,
+        "mean_waiting_fanout": 7.0,
+        "irrelevant_wait_action_rounds": 13
+      },
+      "trace_file": "refund_cross_workflow__terminal_abort__global_fail_closed.jsonl",
+      "input_hashes": [
+        "45910257bb02ef7f5df386d273279711e3e40b76f499dc8834ba7f0e888b78c1",
+        "d7a40ff3c192efb80969e62ccad61645cbb732571f07dae92d301ee27995f427",
+        "78daafb8b06d3b01fbb32a30d0d9ab434b8fed28dc37d964b7af508732002058",
+        "bf70ac2627c7c5d4a1accf9fb4f91d3d19c7355f35c0a9f224bc3b5b220062e6"
+      ],
+      "max_candidate_calls_in_flight": 6
+    },
+    {
+      "scenario_id": "refund_cross_workflow",
+      "realization": "terminal_abort",
+      "baseline": "synthetic_scope_occ",
+      "seed": 42,
+      "metrics": {
+        "decision_opportunities": 32,
+        "unsafe_admissions": 0,
+        "unsafe_admission_rate": 0.0,
+        "unsafe_actual_commits": 0,
+        "unsafe_commit_rate": 0.0,
+        "actual_candidate_commits": 6,
+        "physical_violation_events": 0,
+        "physical_state_checks": 10,
+        "invariant_violation_rate": 0.0,
+        "duplicate_effects": 0,
+        "duplicate_effect_rate": 0.0,
+        "irrecoverable_residue_events": 0,
+        "pre_resolution_safe_opportunities": 13,
+        "safe_opportunities_unnecessarily_blocked": 0,
+        "collateral_block_rate": 0.0,
+        "collateral_safe_actions_distinct": 0,
+        "safe_actions_admitted_before_resolution": 5,
+        "uncertainty_blast_radius": 3,
+        "mean_waiting_fanout": 2.6666666666666665,
+        "irrelevant_wait_action_rounds": 0
+      },
+      "trace_file": "refund_cross_workflow__terminal_abort__synthetic_scope_occ.jsonl",
+      "input_hashes": [
+        "45910257bb02ef7f5df386d273279711e3e40b76f499dc8834ba7f0e888b78c1",
+        "d7a40ff3c192efb80969e62ccad61645cbb732571f07dae92d301ee27995f427",
+        "78daafb8b06d3b01fbb32a30d0d9ab434b8fed28dc37d964b7af508732002058",
+        "bf70ac2627c7c5d4a1accf9fb4f91d3d19c7355f35c0a9f224bc3b5b220062e6"
+      ],
+      "max_candidate_calls_in_flight": 4
+    },
+    {
+      "scenario_id": "refund_cross_workflow",
+      "realization": "terminal_abort",
+      "baseline": "atomix_scope_frontier",
+      "seed": 42,
+      "metrics": {
+        "decision_opportunities": 32,
+        "unsafe_admissions": 0,
+        "unsafe_admission_rate": 0.0,
+        "unsafe_actual_commits": 0,
+        "unsafe_commit_rate": 0.0,
+        "actual_candidate_commits": 6,
+        "physical_violation_events": 0,
+        "physical_state_checks": 10,
+        "invariant_violation_rate": 0.0,
+        "duplicate_effects": 0,
+        "duplicate_effect_rate": 0.0,
+        "irrecoverable_residue_events": 0,
+        "pre_resolution_safe_opportunities": 13,
+        "safe_opportunities_unnecessarily_blocked": 0,
+        "collateral_block_rate": 0.0,
+        "collateral_safe_actions_distinct": 0,
+        "safe_actions_admitted_before_resolution": 5,
+        "uncertainty_blast_radius": 3,
+        "mean_waiting_fanout": 2.6666666666666665,
+        "irrelevant_wait_action_rounds": 0
+      },
+      "trace_file": "refund_cross_workflow__terminal_abort__atomix_scope_frontier.jsonl",
+      "input_hashes": [
+        "45910257bb02ef7f5df386d273279711e3e40b76f499dc8834ba7f0e888b78c1",
+        "d7a40ff3c192efb80969e62ccad61645cbb732571f07dae92d301ee27995f427",
+        "78daafb8b06d3b01fbb32a30d0d9ab434b8fed28dc37d964b7af508732002058",
+        "bf70ac2627c7c5d4a1accf9fb4f91d3d19c7355f35c0a9f224bc3b5b220062e6"
+      ],
+      "max_candidate_calls_in_flight": 4
+    },
+    {
+      "scenario_id": "refund_cross_workflow",
+      "realization": "terminal_abort",
+      "baseline": "semantic_pending_lock",
+      "seed": 42,
+      "metrics": {
+        "decision_opportunities": 32,
+        "unsafe_admissions": 0,
+        "unsafe_admission_rate": 0.0,
+        "unsafe_actual_commits": 0,
+        "unsafe_commit_rate": 0.0,
+        "actual_candidate_commits": 6,
+        "physical_violation_events": 0,
+        "physical_state_checks": 10,
+        "invariant_violation_rate": 0.0,
+        "duplicate_effects": 0,
+        "duplicate_effect_rate": 0.0,
+        "irrecoverable_residue_events": 0,
+        "pre_resolution_safe_opportunities": 13,
+        "safe_opportunities_unnecessarily_blocked": 0,
+        "collateral_block_rate": 0.0,
+        "collateral_safe_actions_distinct": 0,
+        "safe_actions_admitted_before_resolution": 5,
+        "uncertainty_blast_radius": 3,
+        "mean_waiting_fanout": 2.6666666666666665,
+        "irrelevant_wait_action_rounds": 0
+      },
+      "trace_file": "refund_cross_workflow__terminal_abort__semantic_pending_lock.jsonl",
+      "input_hashes": [
+        "45910257bb02ef7f5df386d273279711e3e40b76f499dc8834ba7f0e888b78c1",
+        "d7a40ff3c192efb80969e62ccad61645cbb732571f07dae92d301ee27995f427",
+        "78daafb8b06d3b01fbb32a30d0d9ab434b8fed28dc37d964b7af508732002058",
+        "bf70ac2627c7c5d4a1accf9fb4f91d3d19c7355f35c0a9f224bc3b5b220062e6"
+      ],
+      "max_candidate_calls_in_flight": 4
+    },
+    {
+      "scenario_id": "refund_cross_workflow",
+      "realization": "terminal_abort",
+      "baseline": "tct_c_joint_recertification",
+      "seed": 42,
+      "metrics": {
+        "decision_opportunities": 32,
+        "unsafe_admissions": 0,
+        "unsafe_admission_rate": 0.0,
+        "unsafe_actual_commits": 0,
+        "unsafe_commit_rate": 0.0,
+        "actual_candidate_commits": 6,
+        "physical_violation_events": 0,
+        "physical_state_checks": 10,
+        "invariant_violation_rate": 0.0,
+        "duplicate_effects": 0,
+        "duplicate_effect_rate": 0.0,
+        "irrecoverable_residue_events": 0,
+        "pre_resolution_safe_opportunities": 13,
+        "safe_opportunities_unnecessarily_blocked": 0,
+        "collateral_block_rate": 0.0,
+        "collateral_safe_actions_distinct": 0,
+        "safe_actions_admitted_before_resolution": 5,
+        "uncertainty_blast_radius": 3,
+        "mean_waiting_fanout": 2.6666666666666665,
+        "irrelevant_wait_action_rounds": 0
+      },
+      "trace_file": "refund_cross_workflow__terminal_abort__tct_c_joint_recertification.jsonl",
+      "input_hashes": [
+        "45910257bb02ef7f5df386d273279711e3e40b76f499dc8834ba7f0e888b78c1",
+        "d7a40ff3c192efb80969e62ccad61645cbb732571f07dae92d301ee27995f427",
+        "78daafb8b06d3b01fbb32a30d0d9ab434b8fed28dc37d964b7af508732002058",
+        "bf70ac2627c7c5d4a1accf9fb4f91d3d19c7355f35c0a9f224bc3b5b220062e6"
+      ],
+      "max_candidate_calls_in_flight": 4
+    },
+    {
+      "scenario_id": "refund_cross_workflow",
+      "realization": "terminal_abort",
+      "baseline": "agenttxn_oca",
+      "seed": 42,
+      "metrics": {
+        "decision_opportunities": 32,
+        "unsafe_admissions": 0,
+        "unsafe_admission_rate": 0.0,
+        "unsafe_actual_commits": 0,
+        "unsafe_commit_rate": 0.0,
+        "actual_candidate_commits": 6,
+        "physical_violation_events": 0,
+        "physical_state_checks": 10,
+        "invariant_violation_rate": 0.0,
+        "duplicate_effects": 0,
+        "duplicate_effect_rate": 0.0,
+        "irrecoverable_residue_events": 0,
+        "pre_resolution_safe_opportunities": 13,
+        "safe_opportunities_unnecessarily_blocked": 0,
+        "collateral_block_rate": 0.0,
+        "collateral_safe_actions_distinct": 0,
+        "safe_actions_admitted_before_resolution": 5,
+        "uncertainty_blast_radius": 3,
+        "mean_waiting_fanout": 2.6666666666666665,
+        "irrelevant_wait_action_rounds": 0
+      },
+      "trace_file": "refund_cross_workflow__terminal_abort__agenttxn_oca.jsonl",
+      "input_hashes": [
+        "45910257bb02ef7f5df386d273279711e3e40b76f499dc8834ba7f0e888b78c1",
+        "d7a40ff3c192efb80969e62ccad61645cbb732571f07dae92d301ee27995f427",
+        "78daafb8b06d3b01fbb32a30d0d9ab434b8fed28dc37d964b7af508732002058",
+        "bf70ac2627c7c5d4a1accf9fb4f91d3d19c7355f35c0a9f224bc3b5b220062e6"
+      ],
+      "max_candidate_calls_in_flight": 4
+    }
+  ]
+}

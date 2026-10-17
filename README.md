@@ -2,8 +2,10 @@
 
 AgentTxn is an experimental runtime and benchmark for semantic concurrency in tool-using AI agents. It studies cross-service business invariants when external effects may be ambiguous after timeouts.
 
-**Status: Gate-1B uncertainty-containment feasibility only.** The original Week-2 build remains stopped.
+**Status: Gate 1B complete; STOP for a differentiated runtime contribution.** The original Week-2 build remains stopped.
 The [redesign deep dive](AgentTxn_Redesign_Deep_Dive.md) is the current research direction and overrides conflicting parts of the [original PRD](AgentTxn_PRD.md).
+
+The [Gate-1B report](experiments/gate1b_uncertainty_containment.md) records the exact hypothesis, matched metadata, scenarios, oracle, results, and equivalence analysis. TCT-C-inspired recertification and practical semantic scopes/frontiers reproduce OCA's decisions in the tested finite model. No novelty claim is made.
 
 ## Run Gate 1B
 

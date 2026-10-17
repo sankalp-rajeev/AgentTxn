@@ -23,3 +23,9 @@ tasks before a publication claim.
 Gate 1 update: REDESIGN. The feasibility experiment confirms the synthetic
 incident-budget key allows ordinary OCC to prevent the same budget race. The
 stronger reduction check fails. See [week-one evidence](../experiments/week1.md).
+
+Gate 1B update: STOP for a differentiated runtime contribution. Equally informed
+TCT-C-inspired recertification, synthetic scopes, scope/frontiers, and semantic
+pending locks match OCA in the finite uncertainty-containment experiment. No
+original Week-2 build or LLM integration follows from this result. The benchmark
+has not independently established novelty. See the [Gate-1B report](../experiments/gate1b_uncertainty_containment.md).

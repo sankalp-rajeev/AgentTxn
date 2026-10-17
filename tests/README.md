@@ -1,5 +1,11 @@
 # Tests
 
+Gate 1B adds outcome-set and evidence-epoch persistence, all seven possible-world
+subsets, all five candidate safety classes, matched metadata, all six policies
+and four fault schedules, late completion, terminal-abort fencing, capability
+checks, exact replay, and a negative control that produces detected violations.
+The completed local suite has 45 passing tests with PostgreSQL and TCP enabled.
+
 The suite covers certainty transitions, identity reuse, ambiguous outcomes,
 unknown and pending budget reservations, capability-dependent probes, waiting
 and wakeup, independent overlap, provider deduplication, PostgreSQL reopen
