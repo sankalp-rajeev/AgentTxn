@@ -1,0 +1,1 @@
+"""Mock inventory service package."""

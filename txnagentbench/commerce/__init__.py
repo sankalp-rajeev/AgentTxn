@@ -1,0 +1,1 @@
+"""Commerce benchmark scenario location."""

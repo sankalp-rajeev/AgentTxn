@@ -1,0 +1,1 @@
+"""Mock cloudops service package."""

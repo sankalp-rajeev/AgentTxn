@@ -1,0 +1,29 @@
+# Python and development environments
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.venv/
+.uv-cache/
+.pytest_cache/
+.hypothesis/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Local settings and secrets
+.env
+.env.*
+!.env.example
+.vscode/
+.idea/
+
+# Generated research artifacts
+artifacts/*
+!artifacts/README.md
+
+# OS files
+.DS_Store
+Thumbs.db

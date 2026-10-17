@@ -1,0 +1,1 @@
+"""Mock shipping service package."""

@@ -1,0 +1,3 @@
+# Placeholder domain configuration, not a validated or runnable scenario.
+# Fill after txnagentbench/schema.py is implemented.
+domain: cloudops
