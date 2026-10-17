@@ -52,6 +52,7 @@ def make_event(
         blocking_effect_ids=result.blocking_effect_ids if result else (),
         observation=observation,
         possible_outcomes=record.possible_outcomes,
+        outcome_revision=record.outcome_revision,
     )
 
 
@@ -68,7 +69,13 @@ def refine_record(record: EffectRecord, outcomes: OutcomeSet) -> EffectRecord:
         )
     if after != record.certainty:
         validate_transition(record.certainty, after)
-    return record.model_copy(update={"certainty": after, "possible_outcomes": outcomes})
+    return record.model_copy(
+        update={
+            "certainty": after,
+            "possible_outcomes": outcomes,
+            "outcome_revision": record.outcome_revision + 1,
+        }
+    )
 
 
 class MemoryLedger:

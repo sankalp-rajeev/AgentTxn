@@ -17,6 +17,7 @@ class ToolContract(BaseModel):
     irreversible: bool = False
     compensation_supported: bool = False
     compensation_operation: str | None = None
+    quiescence_certificate_supported: bool = False
 
 
 def week1_contracts() -> dict[Operation, ToolContract]:

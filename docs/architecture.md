@@ -1,5 +1,28 @@
 # Architecture and implementation boundary
 
+## Gate-1B additions
+
+The redesign deep dive supersedes the original PRD. Gate 1B reuses the coordinator,
+HTTP adapter, ledger, migrations, providers, and provenance. It does not advance
+the original Week-2 architecture.
+
+`effects/outcomes.py` separates possible external worlds from the six certainty
+states. Additive migrations persist outcome sets and evidence revisions. The
+shared admission interface is in `runtime/admission.py`; six Gate-1B policies
+consume identical immutable views and validate the same evidence epoch.
+
+`runtime/outcome_admission.py` implements direct OCA; `baselines/uncertainty.py`
+implements equally informed controls. Symbolic compatibility compilation is
+separate from the benchmark's concrete possible-world oracle. The uncertain
+provider extends Week-1 fault injection with late completion and terminal abort;
+the receipt API stays the same. Quiescence is an explicit declared capability.
+
+`txnagentbench/uncertainty_runner.py` schedules common evidence rounds and
+concurrent candidates. `uncertainty_replay.py` reevaluates raw evidence offline.
+`metrics/collateral.py` uses identical fixed decision-panel denominators.
+
+## Preserved Week-1 boundary
+
 The week-one spike implements one coordinator per process, four mock Commerce
 operations, two invariants, three principal runtime policies, and an augmented
 resource-OCC control. Other scaffold modules remain placeholders.

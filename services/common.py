@@ -57,6 +57,8 @@ class MockProvider:
         self.probe = probe or ConcurrencyProbe()
         self.effects: dict[str, ProviderEffect] = {}
         self.journal = journal if journal is not None else []
+        self.pending: dict[str, ToolRequest] = {}
+        self.terminal_absent: set[str] = set()
 
     async def execute(self, request: ToolRequest) -> ToolOutcome:
         if self.operation in {Operation.CHARGE, Operation.SHIP} and not request.order_id:
@@ -77,7 +79,18 @@ class MockProvider:
                 receipt_id=existing.receipt_id,
                 reason="Existing idempotent receipt",
             )
+        if request.logical_operation_id in self.pending:
+            if self.pending[request.logical_operation_id] != request:
+                raise HTTPException(409, "Idempotency key reused with different arguments")
+            return ToolOutcome(
+                certainty=Certainty.UNKNOWN, reason="Same idempotent request in flight"
+            )
+        if request.logical_operation_id in self.terminal_absent:
+            return ToolOutcome(certainty=Certainty.FAILED, reason="Authoritative terminal abort")
         fault = self.faults.on_execute(request.logical_operation_id)
+        if fault == Fault.LATE_COMMIT:
+            self.pending[request.logical_operation_id] = request.model_copy(deep=True)
+            raise HTTPException(504, "Ambiguous timeout")
         if fault == Fault.TIMEOUT_BEFORE_EFFECT:
             raise HTTPException(504, "Ambiguous timeout")
         try:
@@ -103,6 +116,8 @@ class MockProvider:
         )
 
     def reconcile(self, logical_operation_id: str) -> ToolOutcome:
+        if logical_operation_id in self.pending:
+            return ToolOutcome(certainty=Certainty.UNKNOWN, reason="Request remains in flight")
         if self.faults.on_probe(logical_operation_id) == Fault.RECONCILIATION_UNAVAILABLE:
             return ToolOutcome(certainty=Certainty.UNKNOWN, reason="Probe unavailable")
         effect = self.effects.get(logical_operation_id)
@@ -116,6 +131,19 @@ class MockProvider:
             certainty=Certainty.FAILED,
             reason="Definitively absent: immediate provider has no in-flight writes",
         )
+
+    def settle_pending(self, logical_operation_id: str, *, commit: bool) -> None:
+        request = self.pending.pop(logical_operation_id)
+        if commit:
+            effect = ProviderEffect(
+                operation=self.operation,
+                request=request,
+                receipt_id=f"{self.operation}:{logical_operation_id}",
+            )
+            self.effects[logical_operation_id] = effect
+            self.journal.append(effect.model_copy(deep=True))
+        else:
+            self.terminal_absent.add(logical_operation_id)
 
 
 def create_app(provider: MockProvider) -> FastAPI:

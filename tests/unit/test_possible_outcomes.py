@@ -3,8 +3,11 @@ from pydantic import ValidationError
 
 from agenttxn.effects.certainty import Certainty
 from agenttxn.effects.ledger import MemoryLedger
-from agenttxn.effects.models import EffectIntent, Operation
+from agenttxn.effects.models import Decision, EffectIntent, Operation
 from agenttxn.effects.outcomes import ALL_OUTCOMES, QUIESCENT_OUTCOMES, ExternalOutcome, OutcomeSet
+from agenttxn.runtime.uncertainty import AdmissionView, Observation
+from baselines.uncertainty import POLICIES
+from txnagentbench.commerce.gate1b import problems
 
 
 @pytest.mark.parametrize("values", [(), (ExternalOutcome.ABSENT, ExternalOutcome.ABSENT)])
@@ -37,6 +40,7 @@ async def test_refinement_preserves_unknown_until_authoritative_terminal_evidenc
     )
     assert result.certainty == Certainty.UNKNOWN
     assert result.possible_outcomes == QUIESCENT_OUTCOMES
+    assert result.outcome_revision == 1
     count = len(await ledger.events())
     with pytest.raises(ValueError, match="reintroduce"):
         await ledger.refine_outcomes("u", ALL_OUTCOMES, "Invalid widening")
@@ -46,3 +50,22 @@ async def test_refinement_preserves_unknown_until_authoritative_terminal_evidenc
     )
     assert result.certainty == Certainty.FAILED
     assert (await ledger.events())[-1].possible_outcomes == result.possible_outcomes
+
+
+async def test_stale_same_value_evidence_epoch_is_rejected_before_dispatch() -> None:
+    problem = problems()[0]
+    ledger = MemoryLedger("stale-epoch")
+    await ledger.register(problem.upstream)
+    await ledger.transition("upstream", Certainty.PENDING, "Submitted")
+    await ledger.transition("upstream", Certainty.UNKNOWN, "Timeout")
+    await ledger.refine_outcomes("upstream", ALL_OUTCOMES, "First opaque observation")
+    context = AdmissionView(
+        problem=problem,
+        observations=(
+            Observation(round=0, description="First opaque observation", outcomes=ALL_OUTCOMES),
+        ),
+    )
+    await ledger.refine_outcomes("upstream", ALL_OUTCOMES, "Second opaque observation")
+    for policy in POLICIES:
+        result = await policy(context).certify(problem.candidates[1].intent, ledger)
+        assert result.decision == Decision.HUMAN_REVIEW

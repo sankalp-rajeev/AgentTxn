@@ -62,5 +62,19 @@ services:
     healthcheck:
       disable: true
 
+  gate1b:
+    <<: *mock
+    profiles: ["gate1b"]
+    command: ["python", "-m", "experiments.gate1b_uncertainty_containment", "--seed", "42", "--baseline", "all", "--ledger", "postgres", "--output", "artifacts/gate1b"]
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-agenttxn}:${POSTGRES_PASSWORD:-agenttxn_dev}@postgres:5432/${POSTGRES_DB:-agenttxn}
+    volumes:
+      - ./artifacts:/app/artifacts
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      disable: true
+
 volumes:
   postgres_data:

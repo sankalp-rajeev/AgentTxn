@@ -2,7 +2,19 @@
 
 AgentTxn is an experimental runtime and benchmark for semantic concurrency in tool-using AI agents. It studies cross-service business invariants when external effects may be ambiguous after timeouts.
 
-**Status: week-one feasibility spike implemented. Gate verdict: REDESIGN before the full research build.** The original PRD remains [unchanged](AgentTxn_PRD.md).
+**Status: Gate-1B uncertainty-containment feasibility only.** The original Week-2 build remains stopped.
+The [redesign deep dive](AgentTxn_Redesign_Deep_Dive.md) is the current research direction and overrides conflicting parts of the [original PRD](AgentTxn_PRD.md).
+
+## Run Gate 1B
+
+```powershell
+uv sync --locked --extra dev
+uv run --no-sync python -m experiments.gate1b_uncertainty_containment --seed 42 --baseline all
+```
+
+Gate 1B compares six equally informed admission policies on payment and cross-workflow refund uncertainty. Each condition has eight scripted concurrent candidates, explicit COMMITTED/ABSENT/IN_FLIGHT possibilities, and shared evidence rounds. Output is written to `artifacts/gate1b/` and replay-verified before reporting.
+
+Use `--ledger postgres` with DATABASE_URL, or `docker compose run --build --rm gate1b`. No LLM APIs are used. Named TCT-C and Atomix policies are bounded research-inspired admission models, not full paper reproductions.
 
 ## The failure and the boundary
 

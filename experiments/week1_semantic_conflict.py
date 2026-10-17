@@ -2,15 +2,13 @@
 
 import argparse
 import asyncio
-import hashlib
 import json
 import os
 import platform
-import shutil
-import subprocess
 from pathlib import Path
 
 from txnagentbench.commerce.week1 import scenarios
+from txnagentbench.provenance import source_provenance
 from txnagentbench.runner import BASELINES, RunResult, run_scenario
 from txnagentbench.schema import Scenario
 
@@ -51,48 +49,15 @@ def write_manifest(
     args: argparse.Namespace, definitions: list[Scenario], results: list[RunResult]
 ) -> None:
     root = Path(__file__).resolve().parents[1]
-    source_commit = os.environ.get("AGENTTXN_SOURCE_COMMIT", "unavailable")
-    source_dirty: bool | None = None
-    if shutil.which("git"):
-        command = ["git", "-c", f"safe.directory={root.as_posix()}"]
-        revision = subprocess.run(
-            [*command, "rev-parse", "HEAD"],
-            cwd=root,
-            capture_output=True,
-            text=True,
-            check=False,
-        )
-        source_commit = revision.stdout.strip() or source_commit
-        status = subprocess.run(
-            [*command, "status", "--porcelain"],
-            cwd=root,
-            capture_output=True,
-            text=True,
-            check=False,
-        )
-        source_dirty = bool(status.stdout.strip()) if status.returncode == 0 else None
-    source_digest = hashlib.sha256()
-    for package in ("agenttxn", "services", "txnagentbench", "baselines", "experiments"):
-        for source in sorted((root / package).rglob("*")):
-            if source.suffix in {".py", ".sql"}:
-                source_digest.update(source.relative_to(root).as_posix().encode() + b"\0")
-                source_digest.update(source.read_bytes().replace(b"\r\n", b"\n") + b"\0")
     manifest = {
         "benchmark_version": "week1-v1",
         "seed": args.seed,
         "ledger": args.ledger,
         "python": platform.python_version(),
-        "source_commit": source_commit,
-        "source_dirty": source_dirty,
-        "source_tree_sha256": source_digest.hexdigest(),
+        **source_provenance(root),
         "determinism_scope": (
             "Seeded inputs, faults, and admission order; "
             "PostgreSQL completion events may interleave"
-        ),
-        "lockfile_sha256": (
-            hashlib.sha256((root / "uv.lock").read_bytes()).hexdigest()
-            if (root / "uv.lock").exists()
-            else "unavailable"
         ),
         "scenarios": [scenario.model_dump(mode="json") for scenario in definitions],
         "results": [result.model_dump(mode="json") for result in results],

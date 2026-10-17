@@ -73,6 +73,7 @@ class EffectRecord(BaseModel):
     intent: EffectIntent
     certainty: Certainty = Certainty.NOT_STARTED
     possible_outcomes: OutcomeSet | None = None
+    outcome_revision: int = -1
 
 
 class Certification(BaseModel):
@@ -100,3 +101,4 @@ class LedgerEvent(BaseModel):
     blocking_effect_ids: tuple[str, ...] = ()
     observation: str | None = None
     possible_outcomes: OutcomeSet | None = None
+    outcome_revision: int = -1

@@ -64,3 +64,10 @@ commit and content hash, dependency lock hash, and input documents' hashes.
 Preserve Week-1 behavior and tests. Verify the full suite, PostgreSQL, Docker,
 and CI before completing Gate 1B. Produce gate1b_uncertainty_containment.md from
 the collected evidence and state GO, REDESIGN, or STOP explicitly.
+
+Pre-final validation clarifications: quiescence is explicitly declared in the
+tool contract; repeated equal-valued observations still increment the evidence
+revision. Candidate Boolean flags encode the proposed effect, while the joint
+subset audit and provider journal check accumulated effects. These clarify the
+representation and capabilities without changing the action classes, invariants,
+fault branches, or the equivalence rejection rule.

@@ -13,6 +13,10 @@ Compose exposes standalone APIs on localhost ports 18001-18004. Benchmark
 conditions use fresh in-process HTTP instances to reset truth and inject the
 same deterministic schedules. TCP smoke tests independently exercise Compose.
 
-The mocks have no delayed in-flight writes and receipt reads are strongly
-consistent. A missing receipt is definitive only under those assumptions.
-Provider state is lost on restart. Other service directories are placeholders.
+Week-1 default mocks commit immediately and expose strongly consistent receipts.
+Gate 1B's ScheduledUncertainProvider reuses them with opaque observations, explicit
+in-flight requests, late commit, and fenced terminal abort. It exposes possible
+outcomes only through the common reconciliation endpoint. A missing receipt alone
+does not eliminate IN_FLIGHT. Quiescence certificates are capability-checked.
+Provider state remains in memory and is lost on restart. Other service directories
+remain placeholders.

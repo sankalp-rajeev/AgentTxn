@@ -34,10 +34,16 @@ jobs:
         run: uv run --no-sync python -m pytest
       - name: Deterministic benchmark smoke
         run: uv run --no-sync python -m experiments.week1_semantic_conflict --seed 42 --baseline all
+      - name: Gate-1B matched-information and replay smoke
+        run: uv run --no-sync python -m experiments.gate1b_uncertainty_containment --seed 42 --baseline all
       - uses: actions/upload-artifact@v4
         with:
           name: week1-memory-${{ matrix.python-version }}
           path: artifacts/week1/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: gate1b-memory-${{ matrix.python-version }}
+          path: artifacts/gate1b/
       # Expensive LLM experiments must never run in CI.
 
   postgres-smoke:
@@ -66,10 +72,18 @@ jobs:
         env:
           DATABASE_URL: postgresql+asyncpg://agenttxn:agenttxn_dev@localhost:5432/agenttxn
         run: uv run --no-sync python -m experiments.week1_semantic_conflict --seed 42 --baseline all --ledger postgres
+      - name: PostgreSQL Gate-1B smoke and raw-evidence replay
+        env:
+          DATABASE_URL: postgresql+asyncpg://agenttxn:agenttxn_dev@localhost:5432/agenttxn
+        run: uv run --no-sync python -m experiments.gate1b_uncertainty_containment --seed 42 --baseline all --ledger postgres
       - uses: actions/upload-artifact@v4
         with:
           name: week1-postgres
           path: artifacts/week1/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: gate1b-postgres
+          path: artifacts/gate1b/
       - name: Stop services
         if: always()
         run: docker compose down

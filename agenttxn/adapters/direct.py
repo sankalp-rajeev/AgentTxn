@@ -7,6 +7,7 @@ import httpx
 from agenttxn.contracts.models import ToolContract, ToolOutcome, ToolRequest
 from agenttxn.effects.certainty import Certainty
 from agenttxn.effects.models import EffectIntent, Operation
+from agenttxn.effects.outcomes import ALL_OUTCOMES, ExternalOutcome
 
 
 class DirectAdapter:
@@ -53,6 +54,17 @@ class DirectAdapter:
             outcome = ToolOutcome.model_validate(response.json())
             if outcome.certainty == Certainty.FAILED and not contract.definitive_absence:
                 return ToolOutcome(certainty=Certainty.UNKNOWN, reason="Absence is not definitive")
+            if (
+                outcome.certainty == Certainty.UNKNOWN
+                and outcome.possible_outcomes is not None
+                and not outcome.possible_outcomes.contains(ExternalOutcome.IN_FLIGHT)
+                and not contract.quiescence_certificate_supported
+            ):
+                return ToolOutcome(
+                    certainty=Certainty.UNKNOWN,
+                    reason="Contract cannot exclude in-flight writes",
+                    possible_outcomes=ALL_OUTCOMES,
+                )
             if outcome.certainty not in {Certainty.CONFIRMED, Certainty.FAILED, Certainty.UNKNOWN}:
                 return ToolOutcome(certainty=Certainty.UNKNOWN, reason="Invalid probe outcome")
             return outcome

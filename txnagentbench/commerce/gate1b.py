@@ -36,7 +36,9 @@ def candidate(
             action_name=name,
             resource_footprint=(f"action:{name}",),
             semantic_tags=(context,),
-            dependencies=("upstream",) if reads else (),
+            dependencies=("upstream",)
+            if any(name in {"captured", "refunded", "in_flight"} for name in reads)
+            else (),
         ),
         writes=(Fact(name=name, value=True),),
         reads=reads,
@@ -66,10 +68,12 @@ def worlds(
 
 def problems() -> tuple[MatchedProblem, ...]:
     payment_actions = (
-        candidate("unauthorized_export", "order:order-1", irreversible=True),
+        candidate(
+            "unauthorized_export", "order:order-1", reads=("export_authorized",), irreversible=True
+        ),
         candidate("support_note", "order:order-1"),
         candidate("marketing_preference", "customer:customer-1"),
-        candidate("reserve_packaging", "order:order-1"),
+        candidate("reserve_packaging", "order:order-1", reads=("packaging_available",)),
         candidate(
             "ship_order", "order:order-1", reads=("captured", "in_flight"), irreversible=True
         ),
@@ -121,11 +125,22 @@ def problems() -> tuple[MatchedProblem, ...]:
         ),
     )
     refund_actions = (
-        candidate("excess_credit", "customer:customer-1", irreversible=True, amount_cents=60000),
+        candidate(
+            "excess_credit",
+            "customer:customer-1",
+            reads=("excess_credit_within_cap",),
+            irreversible=True,
+            amount_cents=60000,
+        ),
         candidate("incident_note", "customer:customer-1"),
         candidate("fraud_hold", "customer:customer-1"),
         candidate("profile_update", "customer:customer-1"),
-        candidate("replacement_shipment", "customer:customer-1", irreversible=True),
+        candidate(
+            "replacement_shipment",
+            "customer:customer-1",
+            reads=("replacement_authorized",),
+            irreversible=True,
+        ),
         candidate(
             "remove_refunded_loyalty", "customer:customer-1", reads=("refunded", "in_flight")
         ),
@@ -220,7 +235,10 @@ def problems() -> tuple[MatchedProblem, ...]:
                     semantic_tags=(context,),
                 ),
                 upstream_contract=ToolContract(
-                    operation=operation, definitive_absence=True, compensation_supported=False
+                    operation=operation,
+                    definitive_absence=True,
+                    compensation_supported=False,
+                    quiescence_certificate_supported=True,
                 ),
                 worlds=bindings,
                 invariants=rules,

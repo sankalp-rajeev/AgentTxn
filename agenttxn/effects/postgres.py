@@ -76,7 +76,8 @@ class PostgresLedger:
             (
                 await conn.execute(
                     text(
-                        "SELECT intent, certainty, possible_outcomes FROM effect_intents "
+                        "SELECT intent, certainty, possible_outcomes, outcome_revision "
+                        "FROM effect_intents "
                         "WHERE run_id = :run_id AND effect_id = :effect_id" + suffix
                     ),
                     self._params(effect_id),
@@ -95,6 +96,7 @@ class PostgresLedger:
                 if row["possible_outcomes"] is not None
                 else None
             ),
+            outcome_revision=row["outcome_revision"],
         )
 
     async def register(self, intent: EffectIntent) -> EffectRecord:
@@ -143,7 +145,8 @@ class PostgresLedger:
             rows = (
                 await conn.execute(
                     text(
-                        "SELECT intent, certainty, possible_outcomes FROM effect_intents "
+                        "SELECT intent, certainty, possible_outcomes, outcome_revision "
+                        "FROM effect_intents "
                         "WHERE run_id = :run_id ORDER BY effect_id"
                     ),
                     {"run_id": self.run_id},
@@ -158,6 +161,7 @@ class PostgresLedger:
                         if row["possible_outcomes"] is not None
                         else None
                     ),
+                    outcome_revision=row["outcome_revision"],
                 )
                 for row in rows
             ]
@@ -236,11 +240,13 @@ class PostgresLedger:
                 "certainty": updated.certainty.value,
                 "outcomes": outcomes.model_dump_json(),
                 "observation": evidence,
+                "outcome_revision": updated.outcome_revision,
             }
             await conn.execute(
                 text(
                     "UPDATE effect_intents SET certainty = :certainty, "
-                    "possible_outcomes = CAST(:outcomes AS JSONB) "
+                    "possible_outcomes = CAST(:outcomes AS JSONB), "
+                    "outcome_revision = :outcome_revision "
                     "WHERE run_id = :run_id AND effect_id = :effect_id"
                 ),
                 params,

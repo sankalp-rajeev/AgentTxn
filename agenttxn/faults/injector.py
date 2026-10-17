@@ -7,6 +7,7 @@ class Fault(StrEnum):
     NONE = "none"
     TIMEOUT_BEFORE_EFFECT = "timeout_before_effect"
     TIMEOUT_AFTER_EFFECT = "timeout_after_effect"
+    LATE_COMMIT = "late_commit"
     RECONCILIATION_UNAVAILABLE = "reconciliation_unavailable"
 
 

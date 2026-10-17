@@ -31,7 +31,10 @@ class OutcomeAdmissionPolicy(ABC):
 
     async def certify(self, intent: EffectIntent, ledger: Ledger) -> Certification:
         current = await ledger.get(self.view.problem.upstream.effect_id)
-        if current.possible_outcomes != self.view.outcomes:
+        if (
+            current.possible_outcomes != self.view.outcomes
+            or current.outcome_revision != self.view.revision
+        ):
             return Certification(decision=Decision.HUMAN_REVIEW, reason="Stale evidence snapshot")
         result = self.assess(self.by_id[intent.effect_id])
         details = {
