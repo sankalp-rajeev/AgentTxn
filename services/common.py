@@ -61,7 +61,10 @@ class MockProvider:
     async def execute(self, request: ToolRequest) -> ToolOutcome:
         if self.operation in {Operation.CHARGE, Operation.SHIP} and not request.order_id:
             raise HTTPException(422, "order_id is required")
-        if self.operation != Operation.SHIP and request.amount_cents <= 0:
+        if (
+            self.operation in {Operation.CHARGE, Operation.REFUND, Operation.CREDIT}
+            and request.amount_cents <= 0
+        ):
             raise HTTPException(422, "Positive integer cents required")
         if self.operation in {Operation.REFUND, Operation.CREDIT} and not request.incident_id:
             raise HTTPException(422, "incident_id is required")

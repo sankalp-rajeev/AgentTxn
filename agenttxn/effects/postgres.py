@@ -7,8 +7,9 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine, create_async_engine
 
 from agenttxn.effects.certainty import Certainty, validate_transition
-from agenttxn.effects.ledger import make_event
+from agenttxn.effects.ledger import make_event, refine_record
 from agenttxn.effects.models import Certification, EffectIntent, EffectRecord, LedgerEvent
+from agenttxn.effects.outcomes import OutcomeSet
 
 
 class PostgresLedger:
@@ -19,9 +20,7 @@ class PostgresLedger:
         self.engine: AsyncEngine = create_async_engine(database_url)
 
     async def migrate(self) -> None:
-        source = files("agenttxn.effects").joinpath("migrations/0001_effect_ledger.sql")
-        sql = source.read_text(encoding="utf-8")
-        digest = hashlib.sha256(sql.encode()).hexdigest()
+        directory = files("agenttxn.effects").joinpath("migrations")
         async with self.engine.begin() as conn:
             # A transaction-scoped lock protects concurrent migration attempts.
             await conn.execute(text("SELECT pg_advisory_xact_lock(72304101)"))
@@ -31,23 +30,31 @@ class PostgresLedger:
                     "(version INTEGER PRIMARY KEY, checksum TEXT NOT NULL)"
                 )
             )
-            existing = await conn.scalar(
-                text("SELECT checksum FROM agenttxn_schema_migrations WHERE version = 1")
-            )
-            if existing is not None:
-                if existing != digest:
-                    raise ValueError("Applied migration checksum differs from source")
-                return
-            raw = await conn.get_raw_connection()
-            # asyncpg's execute accepts the multi-statement migration in this transaction.
-            driver = raw.driver_connection
-            if driver is None:
-                raise RuntimeError("PostgreSQL driver connection is unavailable")
-            await driver.execute(sql)
-            await conn.execute(
-                text("INSERT INTO agenttxn_schema_migrations VALUES (1, :checksum)"),
-                {"checksum": digest},
-            )
+            for source in sorted(directory.iterdir(), key=lambda item: item.name):
+                if not source.name.endswith(".sql"):
+                    continue
+                version = int(source.name.split("_", 1)[0])
+                sql = source.read_text(encoding="utf-8")
+                digest = hashlib.sha256(sql.encode()).hexdigest()
+                existing = await conn.scalar(
+                    text(
+                        "SELECT checksum FROM agenttxn_schema_migrations WHERE version = :version"
+                    ),
+                    {"version": version},
+                )
+                if existing is not None:
+                    if existing != digest:
+                        raise ValueError("Applied migration checksum differs from source")
+                    continue
+                raw = await conn.get_raw_connection()
+                driver = raw.driver_connection
+                if driver is None:
+                    raise RuntimeError("PostgreSQL driver connection is unavailable")
+                await driver.execute(sql)
+                await conn.execute(
+                    text("INSERT INTO agenttxn_schema_migrations VALUES (:version, :checksum)"),
+                    {"version": version, "checksum": digest},
+                )
 
     async def _event(self, conn: AsyncConnection, event: LedgerEvent) -> None:
         await conn.execute(
@@ -69,7 +76,7 @@ class PostgresLedger:
             (
                 await conn.execute(
                     text(
-                        "SELECT intent, certainty FROM effect_intents "
+                        "SELECT intent, certainty, possible_outcomes FROM effect_intents "
                         "WHERE run_id = :run_id AND effect_id = :effect_id" + suffix
                     ),
                     self._params(effect_id),
@@ -81,7 +88,13 @@ class PostgresLedger:
         if row is None:
             raise KeyError(effect_id)
         return EffectRecord(
-            intent=EffectIntent.model_validate(row["intent"]), certainty=Certainty(row["certainty"])
+            intent=EffectIntent.model_validate(row["intent"]),
+            certainty=Certainty(row["certainty"]),
+            possible_outcomes=(
+                OutcomeSet.model_validate(row["possible_outcomes"])
+                if row["possible_outcomes"] is not None
+                else None
+            ),
         )
 
     async def register(self, intent: EffectIntent) -> EffectRecord:
@@ -130,7 +143,7 @@ class PostgresLedger:
             rows = (
                 await conn.execute(
                     text(
-                        "SELECT intent, certainty FROM effect_intents "
+                        "SELECT intent, certainty, possible_outcomes FROM effect_intents "
                         "WHERE run_id = :run_id ORDER BY effect_id"
                     ),
                     {"run_id": self.run_id},
@@ -140,6 +153,11 @@ class PostgresLedger:
                 EffectRecord(
                     intent=EffectIntent.model_validate(row["intent"]),
                     certainty=Certainty(row["certainty"]),
+                    possible_outcomes=(
+                        OutcomeSet.model_validate(row["possible_outcomes"])
+                        if row["possible_outcomes"] is not None
+                        else None
+                    ),
                 )
                 for row in rows
             ]
@@ -206,3 +224,43 @@ class PostgresLedger:
 
     async def close(self) -> None:
         await self.engine.dispose()
+
+    async def refine_outcomes(
+        self, effect_id: str, outcomes: OutcomeSet, evidence: str
+    ) -> EffectRecord:
+        async with self.engine.begin() as conn:
+            before = await self._get(conn, effect_id, lock=True)
+            updated = refine_record(before, outcomes)
+            params = {
+                **self._params(effect_id),
+                "certainty": updated.certainty.value,
+                "outcomes": outcomes.model_dump_json(),
+                "observation": evidence,
+            }
+            await conn.execute(
+                text(
+                    "UPDATE effect_intents SET certainty = :certainty, "
+                    "possible_outcomes = CAST(:outcomes AS JSONB) "
+                    "WHERE run_id = :run_id AND effect_id = :effect_id"
+                ),
+                params,
+            )
+            await conn.execute(
+                text(
+                    "INSERT INTO effect_observations(run_id, effect_id, observation) "
+                    "VALUES (:run_id, :effect_id, :observation)"
+                ),
+                params,
+            )
+            await self._event(
+                conn,
+                make_event(
+                    self.run_id,
+                    updated,
+                    evidence,
+                    "outcome_observation",
+                    before=before.certainty,
+                    observation=evidence,
+                ),
+            )
+            return updated

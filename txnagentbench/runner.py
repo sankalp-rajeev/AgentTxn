@@ -11,8 +11,9 @@ from pydantic import BaseModel
 from agenttxn.effects.ledger import Ledger, MemoryLedger
 from agenttxn.effects.models import EffectIntent, LedgerEvent, Operation
 from agenttxn.effects.postgres import PostgresLedger
+from agenttxn.runtime.admission import AdmissionPolicy
 from agenttxn.runtime.certifier import SemanticCertifier
-from agenttxn.runtime.coordinator import AdmissionPolicy, Coordinator
+from agenttxn.runtime.coordinator import Coordinator
 from baselines.naive import NaivePolicy
 from baselines.resource_occ import ResourceOCC
 from services.common import ConcurrencyProbe, ProviderEffect

@@ -5,6 +5,7 @@ from typing import Protocol
 
 from agenttxn.effects.certainty import Certainty, validate_transition
 from agenttxn.effects.models import Certification, EffectIntent, EffectRecord, LedgerEvent
+from agenttxn.effects.outcomes import ExternalOutcome, OutcomeSet, validate_refinement
 
 
 class Ledger(Protocol):
@@ -18,6 +19,9 @@ class Ledger(Protocol):
     ) -> EffectRecord: ...
     async def decide(self, effect_id: str, result: Certification) -> None: ...
     async def events(self) -> list[LedgerEvent]: ...
+    async def refine_outcomes(
+        self, effect_id: str, outcomes: OutcomeSet, evidence: str
+    ) -> EffectRecord: ...
     async def close(self) -> None: ...
 
 
@@ -47,7 +51,24 @@ def make_event(
         relevant_invariants=result.invariants if result else (),
         blocking_effect_ids=result.blocking_effect_ids if result else (),
         observation=observation,
+        possible_outcomes=record.possible_outcomes,
     )
+
+
+def refine_record(record: EffectRecord, outcomes: OutcomeSet) -> EffectRecord:
+    if record.certainty not in {Certainty.UNKNOWN, Certainty.CONFIRMED, Certainty.FAILED}:
+        raise ValueError("Outcome evidence requires an observed external request")
+    validate_refinement(record.possible_outcomes, outcomes)
+    after = Certainty.UNKNOWN
+    if outcomes.terminal:
+        after = (
+            Certainty.CONFIRMED
+            if outcomes.contains(ExternalOutcome.COMMITTED)
+            else Certainty.FAILED
+        )
+    if after != record.certainty:
+        validate_transition(record.certainty, after)
+    return record.model_copy(update={"certainty": after, "possible_outcomes": outcomes})
 
 
 class MemoryLedger:
@@ -118,6 +139,25 @@ class MemoryLedger:
     async def events(self) -> list[LedgerEvent]:
         async with self._lock:
             return [event.model_copy(deep=True) for event in self._events]
+
+    async def refine_outcomes(
+        self, effect_id: str, outcomes: OutcomeSet, evidence: str
+    ) -> EffectRecord:
+        async with self._lock:
+            before = self._records[effect_id]
+            updated = refine_record(before, outcomes)
+            self._records[effect_id] = updated
+            self._append(
+                make_event(
+                    self.run_id,
+                    updated,
+                    evidence,
+                    "outcome_observation",
+                    before=before.certainty,
+                    observation=evidence,
+                )
+            )
+            return updated.model_copy(deep=True)
 
     async def close(self) -> None:
         return None

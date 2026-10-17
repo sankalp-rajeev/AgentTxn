@@ -3,18 +3,13 @@
 import asyncio
 from collections.abc import Callable
 from contextlib import AsyncExitStack
-from typing import Protocol
 
 from agenttxn.adapters.direct import DirectAdapter
 from agenttxn.contracts.models import ToolOutcome
 from agenttxn.effects.certainty import Certainty
 from agenttxn.effects.ledger import Ledger
 from agenttxn.effects.models import Certification, Decision, EffectIntent, EffectRecord
-
-
-class AdmissionPolicy(Protocol):
-    def keys(self, intent: EffectIntent) -> tuple[str, ...]: ...
-    async def certify(self, intent: EffectIntent, ledger: Ledger) -> Certification: ...
+from agenttxn.runtime.admission import AdmissionPolicy
 
 
 class Coordinator:
@@ -67,7 +62,9 @@ class Coordinator:
     async def reconcile(self, effect_id: str) -> ToolOutcome:
         return await self._resolve(effect_id)
 
-    async def submit(self, intent: EffectIntent, *, wait_timeout: float = 5.0) -> Certification:
+    async def submit(
+        self, intent: EffectIntent, *, wait_timeout: float = 5.0, wait_for_evidence: bool = True
+    ) -> Certification:
         async with self._effect_locks.setdefault(intent.effect_id, asyncio.Lock()):
             record = await self.ledger.register(intent)
             if record.certainty != Certainty.NOT_STARTED:
@@ -109,6 +106,8 @@ class Coordinator:
                         return result
                     continue
                 if result.decision == Decision.WAIT:
+                    if not wait_for_evidence:
+                        return result
                     try:
                         await self._wait_for_change(generation, wait_timeout)
                     except TimeoutError:

@@ -5,6 +5,7 @@ from enum import StrEnum
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from agenttxn.effects.certainty import Certainty
+from agenttxn.effects.outcomes import OutcomeSet
 
 
 class Operation(StrEnum):
@@ -12,6 +13,7 @@ class Operation(StrEnum):
     SHIP = "ship"
     REFUND = "refund"
     CREDIT = "credit"
+    CANDIDATE = "candidate"
 
 
 class Decision(StrEnum):
@@ -50,12 +52,16 @@ class EffectIntent(BaseModel):
     semantic_tags: tuple[str, ...] = ()
     dependencies: tuple[str, ...] = ()
     read_versions: dict[str, int] = Field(default_factory=dict)
+    action_name: str | None = None
 
     @model_validator(mode="after")
     def validate_arguments(self) -> "EffectIntent":
         if self.operation in {Operation.CHARGE, Operation.SHIP} and not self.order_id:
             raise ValueError("Charge and shipment require order_id")
-        if self.operation != Operation.SHIP and self.amount_cents <= 0:
+        if (
+            self.operation in {Operation.CHARGE, Operation.REFUND, Operation.CREDIT}
+            and self.amount_cents <= 0
+        ):
             raise ValueError("Financial effects require positive integer cents")
         if self.operation in {Operation.REFUND, Operation.CREDIT} and not self.incident_id:
             raise ValueError("Customer compensation requires incident_id")
@@ -66,6 +72,7 @@ class EffectRecord(BaseModel):
     model_config = ConfigDict(frozen=True)
     intent: EffectIntent
     certainty: Certainty = Certainty.NOT_STARTED
+    possible_outcomes: OutcomeSet | None = None
 
 
 class Certification(BaseModel):
@@ -92,3 +99,4 @@ class LedgerEvent(BaseModel):
     relevant_invariants: tuple[str, ...] = ()
     blocking_effect_ids: tuple[str, ...] = ()
     observation: str | None = None
+    possible_outcomes: OutcomeSet | None = None
