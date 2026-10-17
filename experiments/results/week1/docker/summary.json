@@ -1,0 +1,702 @@
+{
+  "benchmark_version": "week1-v1",
+  "seed": 42,
+  "ledger": "postgres",
+  "python": "3.11.17",
+  "source_commit": "unavailable",
+  "source_dirty": null,
+  "source_tree_sha256": "7b4b052290958193c4f9b255dca4aca8ea3f6ec63632d85b546ba737f0a952a0",
+  "determinism_scope": "Seeded inputs, faults, and admission order; PostgreSQL completion events may interleave",
+  "lockfile_sha256": "e64ecf3c1ed01d9418f68bc3af09489af3aaec4174bf61741f1add6e53fd9539",
+  "scenarios": [
+    {
+      "scenario_id": "ambiguous_payment_after_effect",
+      "domain": "commerce",
+      "initial_state": {
+        "payment": "absent",
+        "shipment": "absent"
+      },
+      "agents": [
+        "agent:payment",
+        "agent:shipping"
+      ],
+      "workflows": [
+        {
+          "effect_id": "charge-1",
+          "logical_operation_id": "charge-1",
+          "transaction_id": "txn:charge",
+          "agent_id": "agent:payment",
+          "workflow_id": "workflow:payment",
+          "operation": "charge",
+          "order_id": "order-1",
+          "incident_id": null,
+          "amount_cents": 10000,
+          "resource_footprint": [
+            "payment:order-1"
+          ],
+          "semantic_tags": [],
+          "dependencies": [],
+          "read_versions": {}
+        },
+        {
+          "effect_id": "ship-1",
+          "logical_operation_id": "ship-1",
+          "transaction_id": "txn:ship",
+          "agent_id": "agent:shipping",
+          "workflow_id": "workflow:shipping",
+          "operation": "ship",
+          "order_id": "order-1",
+          "incident_id": null,
+          "amount_cents": 0,
+          "resource_footprint": [
+            "shipment:order-1"
+          ],
+          "semantic_tags": [],
+          "dependencies": [
+            "charge-1"
+          ],
+          "read_versions": {
+            "payment:order-1": 0
+          }
+        }
+      ],
+      "tool_contracts": [
+        {
+          "operation": "charge",
+          "idempotency_supported": true,
+          "reconciliation_supported": true,
+          "definitive_absence": true,
+          "irreversible": false
+        },
+        {
+          "operation": "ship",
+          "idempotency_supported": true,
+          "reconciliation_supported": true,
+          "definitive_absence": true,
+          "irreversible": true
+        },
+        {
+          "operation": "refund",
+          "idempotency_supported": true,
+          "reconciliation_supported": true,
+          "definitive_absence": true,
+          "irreversible": false
+        },
+        {
+          "operation": "credit",
+          "idempotency_supported": true,
+          "reconciliation_supported": true,
+          "definitive_absence": true,
+          "irreversible": false
+        }
+      ],
+      "semantic_invariants": [
+        "shipment_requires_confirmed_payment"
+      ],
+      "fault_schedule": {
+        "charge-1": "timeout_after_effect"
+      },
+      "success_conditions": [
+        "Do not dispatch shipment without confirmed prerequisite evidence"
+      ],
+      "forbidden_states": [
+        "Shipment without a real charge",
+        "Shipment while charge is UNKNOWN"
+      ],
+      "expected_serial_outcome": "One charge and one shipment after reconciliation",
+      "budgets_cents": {},
+      "require_provider_overlap": 0
+    },
+    {
+      "scenario_id": "ambiguous_payment_before_effect",
+      "domain": "commerce",
+      "initial_state": {
+        "payment": "absent",
+        "shipment": "absent"
+      },
+      "agents": [
+        "agent:payment",
+        "agent:shipping"
+      ],
+      "workflows": [
+        {
+          "effect_id": "charge-1",
+          "logical_operation_id": "charge-1",
+          "transaction_id": "txn:charge",
+          "agent_id": "agent:payment",
+          "workflow_id": "workflow:payment",
+          "operation": "charge",
+          "order_id": "order-1",
+          "incident_id": null,
+          "amount_cents": 10000,
+          "resource_footprint": [
+            "payment:order-1"
+          ],
+          "semantic_tags": [],
+          "dependencies": [],
+          "read_versions": {}
+        },
+        {
+          "effect_id": "ship-1",
+          "logical_operation_id": "ship-1",
+          "transaction_id": "txn:ship",
+          "agent_id": "agent:shipping",
+          "workflow_id": "workflow:shipping",
+          "operation": "ship",
+          "order_id": "order-1",
+          "incident_id": null,
+          "amount_cents": 0,
+          "resource_footprint": [
+            "shipment:order-1"
+          ],
+          "semantic_tags": [],
+          "dependencies": [
+            "charge-1"
+          ],
+          "read_versions": {
+            "payment:order-1": 0
+          }
+        }
+      ],
+      "tool_contracts": [
+        {
+          "operation": "charge",
+          "idempotency_supported": true,
+          "reconciliation_supported": true,
+          "definitive_absence": true,
+          "irreversible": false
+        },
+        {
+          "operation": "ship",
+          "idempotency_supported": true,
+          "reconciliation_supported": true,
+          "definitive_absence": true,
+          "irreversible": true
+        },
+        {
+          "operation": "refund",
+          "idempotency_supported": true,
+          "reconciliation_supported": true,
+          "definitive_absence": true,
+          "irreversible": false
+        },
+        {
+          "operation": "credit",
+          "idempotency_supported": true,
+          "reconciliation_supported": true,
+          "definitive_absence": true,
+          "irreversible": false
+        }
+      ],
+      "semantic_invariants": [
+        "shipment_requires_confirmed_payment"
+      ],
+      "fault_schedule": {
+        "charge-1": "timeout_before_effect"
+      },
+      "success_conditions": [
+        "Do not dispatch shipment without confirmed prerequisite evidence"
+      ],
+      "forbidden_states": [
+        "Shipment without a real charge",
+        "Shipment while charge is UNKNOWN"
+      ],
+      "expected_serial_outcome": "No charge or shipment; payment failure resolved by definitive probe",
+      "budgets_cents": {},
+      "require_provider_overlap": 0
+    },
+    {
+      "scenario_id": "disjoint_resource_compensation",
+      "domain": "commerce",
+      "initial_state": {
+        "committed_compensation_cents": 0
+      },
+      "agents": [
+        "agent:credit-1",
+        "agent:refund-1"
+      ],
+      "workflows": [
+        {
+          "effect_id": "credit-1",
+          "logical_operation_id": "credit-1",
+          "transaction_id": "txn:credit-1",
+          "agent_id": "agent:credit-1",
+          "workflow_id": "workflow:credit-1",
+          "operation": "credit",
+          "order_id": null,
+          "incident_id": "incident-1",
+          "amount_cents": 30000,
+          "resource_footprint": [
+            "credit:credit-1"
+          ],
+          "semantic_tags": [],
+          "dependencies": [],
+          "read_versions": {}
+        },
+        {
+          "effect_id": "refund-1",
+          "logical_operation_id": "refund-1",
+          "transaction_id": "txn:refund-1",
+          "agent_id": "agent:refund-1",
+          "workflow_id": "workflow:refund-1",
+          "operation": "refund",
+          "order_id": null,
+          "incident_id": "incident-1",
+          "amount_cents": 30000,
+          "resource_footprint": [
+            "refund:refund-1"
+          ],
+          "semantic_tags": [],
+          "dependencies": [],
+          "read_versions": {}
+        }
+      ],
+      "tool_contracts": [
+        {
+          "operation": "charge",
+          "idempotency_supported": true,
+          "reconciliation_supported": true,
+          "definitive_absence": true,
+          "irreversible": false
+        },
+        {
+          "operation": "ship",
+          "idempotency_supported": true,
+          "reconciliation_supported": true,
+          "definitive_absence": true,
+          "irreversible": true
+        },
+        {
+          "operation": "refund",
+          "idempotency_supported": true,
+          "reconciliation_supported": true,
+          "definitive_absence": true,
+          "irreversible": false
+        },
+        {
+          "operation": "credit",
+          "idempotency_supported": true,
+          "reconciliation_supported": true,
+          "definitive_absence": true,
+          "irreversible": false
+        }
+      ],
+      "semantic_invariants": [
+        "incident_compensation_cap"
+      ],
+      "fault_schedule": {},
+      "success_conditions": [
+        "Respect each incident budget",
+        "Admit independent work concurrently"
+      ],
+      "forbidden_states": [
+        "Committed compensation exceeds an incident budget"
+      ],
+      "expected_serial_outcome": "Exactly one 30000-cent compensation effect under a 50000-cent budget",
+      "budgets_cents": {
+        "incident-1": 50000
+      },
+      "require_provider_overlap": 0
+    },
+    {
+      "scenario_id": "independent_compensation",
+      "domain": "commerce",
+      "initial_state": {
+        "committed_compensation_cents": 0
+      },
+      "agents": [
+        "agent:credit-1",
+        "agent:refund-1"
+      ],
+      "workflows": [
+        {
+          "effect_id": "credit-1",
+          "logical_operation_id": "credit-1",
+          "transaction_id": "txn:credit-1",
+          "agent_id": "agent:credit-1",
+          "workflow_id": "workflow:credit-1",
+          "operation": "credit",
+          "order_id": null,
+          "incident_id": "incident-2",
+          "amount_cents": 30000,
+          "resource_footprint": [
+            "credit:credit-1"
+          ],
+          "semantic_tags": [],
+          "dependencies": [],
+          "read_versions": {}
+        },
+        {
+          "effect_id": "refund-1",
+          "logical_operation_id": "refund-1",
+          "transaction_id": "txn:refund-1",
+          "agent_id": "agent:refund-1",
+          "workflow_id": "workflow:refund-1",
+          "operation": "refund",
+          "order_id": null,
+          "incident_id": "incident-1",
+          "amount_cents": 30000,
+          "resource_footprint": [
+            "refund:refund-1"
+          ],
+          "semantic_tags": [],
+          "dependencies": [],
+          "read_versions": {}
+        }
+      ],
+      "tool_contracts": [
+        {
+          "operation": "charge",
+          "idempotency_supported": true,
+          "reconciliation_supported": true,
+          "definitive_absence": true,
+          "irreversible": false
+        },
+        {
+          "operation": "ship",
+          "idempotency_supported": true,
+          "reconciliation_supported": true,
+          "definitive_absence": true,
+          "irreversible": true
+        },
+        {
+          "operation": "refund",
+          "idempotency_supported": true,
+          "reconciliation_supported": true,
+          "definitive_absence": true,
+          "irreversible": false
+        },
+        {
+          "operation": "credit",
+          "idempotency_supported": true,
+          "reconciliation_supported": true,
+          "definitive_absence": true,
+          "irreversible": false
+        }
+      ],
+      "semantic_invariants": [
+        "incident_compensation_cap"
+      ],
+      "fault_schedule": {},
+      "success_conditions": [
+        "Respect each incident budget",
+        "Admit independent work concurrently"
+      ],
+      "forbidden_states": [
+        "Committed compensation exceeds an incident budget"
+      ],
+      "expected_serial_outcome": "Two effects on separate incidents",
+      "budgets_cents": {
+        "incident-1": 50000,
+        "incident-2": 50000
+      },
+      "require_provider_overlap": 2
+    }
+  ],
+  "results": [
+    {
+      "scenario_id": "ambiguous_payment_after_effect",
+      "baseline": "naive",
+      "seed": 42,
+      "scenario_sha256": "f8ed27c124325ccee263bd94039176a109a30342e660813a265a1ea5ebefe206",
+      "metrics": {
+        "invariant_violations": 0,
+        "unsafe_downstream_actions": 1,
+        "committed_external_effects": 2,
+        "confirmed_local_effects": 1,
+        "unresolved_unknown_effects": 1,
+        "duplicate_effects": 0,
+        "blocked_intents": 0,
+        "reconciliation_decisions": 0,
+        "max_provider_calls_in_flight": 1,
+        "task_success": false
+      },
+      "trace_file": "ambiguous_payment_after_effect__naive.jsonl"
+    },
+    {
+      "scenario_id": "ambiguous_payment_after_effect",
+      "baseline": "resource_occ",
+      "seed": 42,
+      "scenario_sha256": "f8ed27c124325ccee263bd94039176a109a30342e660813a265a1ea5ebefe206",
+      "metrics": {
+        "invariant_violations": 0,
+        "unsafe_downstream_actions": 0,
+        "committed_external_effects": 1,
+        "confirmed_local_effects": 0,
+        "unresolved_unknown_effects": 1,
+        "duplicate_effects": 0,
+        "blocked_intents": 1,
+        "reconciliation_decisions": 0,
+        "max_provider_calls_in_flight": 1,
+        "task_success": false
+      },
+      "trace_file": "ambiguous_payment_after_effect__resource_occ.jsonl"
+    },
+    {
+      "scenario_id": "ambiguous_payment_after_effect",
+      "baseline": "agenttxn",
+      "seed": 42,
+      "scenario_sha256": "f8ed27c124325ccee263bd94039176a109a30342e660813a265a1ea5ebefe206",
+      "metrics": {
+        "invariant_violations": 0,
+        "unsafe_downstream_actions": 0,
+        "committed_external_effects": 2,
+        "confirmed_local_effects": 2,
+        "unresolved_unknown_effects": 0,
+        "duplicate_effects": 0,
+        "blocked_intents": 0,
+        "reconciliation_decisions": 1,
+        "max_provider_calls_in_flight": 1,
+        "task_success": true
+      },
+      "trace_file": "ambiguous_payment_after_effect__agenttxn.jsonl"
+    },
+    {
+      "scenario_id": "ambiguous_payment_after_effect",
+      "baseline": "resource_occ_semantic_scope",
+      "seed": 42,
+      "scenario_sha256": "f8ed27c124325ccee263bd94039176a109a30342e660813a265a1ea5ebefe206",
+      "metrics": {
+        "invariant_violations": 0,
+        "unsafe_downstream_actions": 0,
+        "committed_external_effects": 1,
+        "confirmed_local_effects": 0,
+        "unresolved_unknown_effects": 1,
+        "duplicate_effects": 0,
+        "blocked_intents": 1,
+        "reconciliation_decisions": 0,
+        "max_provider_calls_in_flight": 1,
+        "task_success": false
+      },
+      "trace_file": "ambiguous_payment_after_effect__resource_occ_semantic_scope.jsonl"
+    },
+    {
+      "scenario_id": "ambiguous_payment_before_effect",
+      "baseline": "naive",
+      "seed": 42,
+      "scenario_sha256": "d42955c063f1d362dc7cf76f3bb71379903fef1efb1da0c145ea27a546c94d41",
+      "metrics": {
+        "invariant_violations": 1,
+        "unsafe_downstream_actions": 1,
+        "committed_external_effects": 1,
+        "confirmed_local_effects": 1,
+        "unresolved_unknown_effects": 1,
+        "duplicate_effects": 0,
+        "blocked_intents": 0,
+        "reconciliation_decisions": 0,
+        "max_provider_calls_in_flight": 1,
+        "task_success": false
+      },
+      "trace_file": "ambiguous_payment_before_effect__naive.jsonl"
+    },
+    {
+      "scenario_id": "ambiguous_payment_before_effect",
+      "baseline": "resource_occ",
+      "seed": 42,
+      "scenario_sha256": "d42955c063f1d362dc7cf76f3bb71379903fef1efb1da0c145ea27a546c94d41",
+      "metrics": {
+        "invariant_violations": 0,
+        "unsafe_downstream_actions": 0,
+        "committed_external_effects": 0,
+        "confirmed_local_effects": 0,
+        "unresolved_unknown_effects": 1,
+        "duplicate_effects": 0,
+        "blocked_intents": 1,
+        "reconciliation_decisions": 0,
+        "max_provider_calls_in_flight": 0,
+        "task_success": false
+      },
+      "trace_file": "ambiguous_payment_before_effect__resource_occ.jsonl"
+    },
+    {
+      "scenario_id": "ambiguous_payment_before_effect",
+      "baseline": "agenttxn",
+      "seed": 42,
+      "scenario_sha256": "d42955c063f1d362dc7cf76f3bb71379903fef1efb1da0c145ea27a546c94d41",
+      "metrics": {
+        "invariant_violations": 0,
+        "unsafe_downstream_actions": 0,
+        "committed_external_effects": 0,
+        "confirmed_local_effects": 0,
+        "unresolved_unknown_effects": 0,
+        "duplicate_effects": 0,
+        "blocked_intents": 1,
+        "reconciliation_decisions": 1,
+        "max_provider_calls_in_flight": 0,
+        "task_success": true
+      },
+      "trace_file": "ambiguous_payment_before_effect__agenttxn.jsonl"
+    },
+    {
+      "scenario_id": "ambiguous_payment_before_effect",
+      "baseline": "resource_occ_semantic_scope",
+      "seed": 42,
+      "scenario_sha256": "d42955c063f1d362dc7cf76f3bb71379903fef1efb1da0c145ea27a546c94d41",
+      "metrics": {
+        "invariant_violations": 0,
+        "unsafe_downstream_actions": 0,
+        "committed_external_effects": 0,
+        "confirmed_local_effects": 0,
+        "unresolved_unknown_effects": 1,
+        "duplicate_effects": 0,
+        "blocked_intents": 1,
+        "reconciliation_decisions": 0,
+        "max_provider_calls_in_flight": 0,
+        "task_success": false
+      },
+      "trace_file": "ambiguous_payment_before_effect__resource_occ_semantic_scope.jsonl"
+    },
+    {
+      "scenario_id": "disjoint_resource_compensation",
+      "baseline": "naive",
+      "seed": 42,
+      "scenario_sha256": "2be2b627bf801c88943dabcfdc2338ad72a698d7bc6b5f640ff29b6bfd371eae",
+      "metrics": {
+        "invariant_violations": 1,
+        "unsafe_downstream_actions": 0,
+        "committed_external_effects": 2,
+        "confirmed_local_effects": 2,
+        "unresolved_unknown_effects": 0,
+        "duplicate_effects": 0,
+        "blocked_intents": 0,
+        "reconciliation_decisions": 0,
+        "max_provider_calls_in_flight": 2,
+        "task_success": false
+      },
+      "trace_file": "disjoint_resource_compensation__naive.jsonl"
+    },
+    {
+      "scenario_id": "disjoint_resource_compensation",
+      "baseline": "resource_occ",
+      "seed": 42,
+      "scenario_sha256": "2be2b627bf801c88943dabcfdc2338ad72a698d7bc6b5f640ff29b6bfd371eae",
+      "metrics": {
+        "invariant_violations": 1,
+        "unsafe_downstream_actions": 0,
+        "committed_external_effects": 2,
+        "confirmed_local_effects": 2,
+        "unresolved_unknown_effects": 0,
+        "duplicate_effects": 0,
+        "blocked_intents": 0,
+        "reconciliation_decisions": 0,
+        "max_provider_calls_in_flight": 2,
+        "task_success": false
+      },
+      "trace_file": "disjoint_resource_compensation__resource_occ.jsonl"
+    },
+    {
+      "scenario_id": "disjoint_resource_compensation",
+      "baseline": "agenttxn",
+      "seed": 42,
+      "scenario_sha256": "2be2b627bf801c88943dabcfdc2338ad72a698d7bc6b5f640ff29b6bfd371eae",
+      "metrics": {
+        "invariant_violations": 0,
+        "unsafe_downstream_actions": 0,
+        "committed_external_effects": 1,
+        "confirmed_local_effects": 1,
+        "unresolved_unknown_effects": 0,
+        "duplicate_effects": 0,
+        "blocked_intents": 1,
+        "reconciliation_decisions": 0,
+        "max_provider_calls_in_flight": 1,
+        "task_success": true
+      },
+      "trace_file": "disjoint_resource_compensation__agenttxn.jsonl"
+    },
+    {
+      "scenario_id": "disjoint_resource_compensation",
+      "baseline": "resource_occ_semantic_scope",
+      "seed": 42,
+      "scenario_sha256": "2be2b627bf801c88943dabcfdc2338ad72a698d7bc6b5f640ff29b6bfd371eae",
+      "metrics": {
+        "invariant_violations": 0,
+        "unsafe_downstream_actions": 0,
+        "committed_external_effects": 1,
+        "confirmed_local_effects": 1,
+        "unresolved_unknown_effects": 0,
+        "duplicate_effects": 0,
+        "blocked_intents": 1,
+        "reconciliation_decisions": 0,
+        "max_provider_calls_in_flight": 1,
+        "task_success": true
+      },
+      "trace_file": "disjoint_resource_compensation__resource_occ_semantic_scope.jsonl"
+    },
+    {
+      "scenario_id": "independent_compensation",
+      "baseline": "naive",
+      "seed": 42,
+      "scenario_sha256": "8a2a9e352537076cf125bd2166bd57368c6e5191035029d6fb632951b2d76216",
+      "metrics": {
+        "invariant_violations": 0,
+        "unsafe_downstream_actions": 0,
+        "committed_external_effects": 2,
+        "confirmed_local_effects": 2,
+        "unresolved_unknown_effects": 0,
+        "duplicate_effects": 0,
+        "blocked_intents": 0,
+        "reconciliation_decisions": 0,
+        "max_provider_calls_in_flight": 2,
+        "task_success": true
+      },
+      "trace_file": "independent_compensation__naive.jsonl"
+    },
+    {
+      "scenario_id": "independent_compensation",
+      "baseline": "resource_occ",
+      "seed": 42,
+      "scenario_sha256": "8a2a9e352537076cf125bd2166bd57368c6e5191035029d6fb632951b2d76216",
+      "metrics": {
+        "invariant_violations": 0,
+        "unsafe_downstream_actions": 0,
+        "committed_external_effects": 2,
+        "confirmed_local_effects": 2,
+        "unresolved_unknown_effects": 0,
+        "duplicate_effects": 0,
+        "blocked_intents": 0,
+        "reconciliation_decisions": 0,
+        "max_provider_calls_in_flight": 2,
+        "task_success": true
+      },
+      "trace_file": "independent_compensation__resource_occ.jsonl"
+    },
+    {
+      "scenario_id": "independent_compensation",
+      "baseline": "agenttxn",
+      "seed": 42,
+      "scenario_sha256": "8a2a9e352537076cf125bd2166bd57368c6e5191035029d6fb632951b2d76216",
+      "metrics": {
+        "invariant_violations": 0,
+        "unsafe_downstream_actions": 0,
+        "committed_external_effects": 2,
+        "confirmed_local_effects": 2,
+        "unresolved_unknown_effects": 0,
+        "duplicate_effects": 0,
+        "blocked_intents": 0,
+        "reconciliation_decisions": 0,
+        "max_provider_calls_in_flight": 2,
+        "task_success": true
+      },
+      "trace_file": "independent_compensation__agenttxn.jsonl"
+    },
+    {
+      "scenario_id": "independent_compensation",
+      "baseline": "resource_occ_semantic_scope",
+      "seed": 42,
+      "scenario_sha256": "8a2a9e352537076cf125bd2166bd57368c6e5191035029d6fb632951b2d76216",
+      "metrics": {
+        "invariant_violations": 0,
+        "unsafe_downstream_actions": 0,
+        "committed_external_effects": 2,
+        "confirmed_local_effects": 2,
+        "unresolved_unknown_effects": 0,
+        "duplicate_effects": 0,
+        "blocked_intents": 0,
+        "reconciliation_decisions": 0,
+        "max_provider_calls_in_flight": 2,
+        "task_success": true
+      },
+      "trace_file": "independent_compensation__resource_occ_semantic_scope.jsonl"
+    }
+  ]
+}
