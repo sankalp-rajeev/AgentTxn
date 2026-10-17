@@ -1,3 +1,11 @@
+x-mock: &mock
+  build: .
+  healthcheck:
+    test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+    interval: 5s
+    timeout: 5s
+    retries: 10
+
 services:
   postgres:
     image: postgres:16
@@ -15,6 +23,44 @@ services:
       timeout: 5s
       retries: 10
     restart: unless-stopped
+
+  payments:
+    <<: *mock
+    command: ["uvicorn", "services.payments.app:app", "--host", "0.0.0.0", "--port", "8000"]
+    ports:
+      - "127.0.0.1:${PAYMENTS_PORT:-18001}:8000"
+
+  shipping:
+    <<: *mock
+    command: ["uvicorn", "services.shipping.app:app", "--host", "0.0.0.0", "--port", "8000"]
+    ports:
+      - "127.0.0.1:${SHIPPING_PORT:-18002}:8000"
+
+  refunds:
+    <<: *mock
+    command: ["uvicorn", "services.refunds.app:app", "--host", "0.0.0.0", "--port", "8000"]
+    ports:
+      - "127.0.0.1:${REFUNDS_PORT:-18003}:8000"
+
+  customer-credit:
+    <<: *mock
+    command: ["uvicorn", "services.customer_credit.app:app", "--host", "0.0.0.0", "--port", "8000"]
+    ports:
+      - "127.0.0.1:${CREDIT_PORT:-18004}:8000"
+
+  benchmark:
+    <<: *mock
+    profiles: ["benchmark"]
+    command: ["python", "-m", "experiments.week1_semantic_conflict", "--seed", "42", "--baseline", "all", "--ledger", "postgres"]
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-agenttxn}:${POSTGRES_PASSWORD:-agenttxn_dev}@postgres:5432/${POSTGRES_DB:-agenttxn}
+    volumes:
+      - ./artifacts:/app/artifacts
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      disable: true
 
 volumes:
   postgres_data:

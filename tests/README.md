@@ -1,14 +1,14 @@
-# Testing plan
+# Tests
 
-No behavioral tests are included for this directory-only scaffold.
+The suite covers certainty transitions, identity reuse, ambiguous outcomes,
+unknown and pending budget reservations, capability-dependent probes, waiting
+and wakeup, independent overlap, provider deduplication, PostgreSQL reopen
+durability and append-only events, the stronger OCC control, exact in-memory
+replay, TCP services, and 30 deterministic Hypothesis budget examples.
 
-- unit/: certainty transitions, contract validation, graph edges, invariant decisions.
-- integration/: intent -> certification -> faulted tool -> observation -> wakeup.
-- property/: unknown prerequisites block irreversible effects; hard invariants hold;
-  safe retries do not duplicate effects; independent work does not block; compensation
-  releases active capacity.
-- regression/: permanent cases for every discovered correctness bug.
+Run `uv run --no-sync python -m pytest`. Set AGENTTXN_TEST_DATABASE_URL for the
+PostgreSQL test and AGENTTXN_TEST_TCP=1 for the Compose endpoint test; otherwise
+they skip explicitly. CI enables both against its own Compose services.
 
-Use pytest and Hypothesis. Bound generated examples for CI. Add deterministic
-benchmark smoke coverage with the first runnable scenario. CI runs pytest when
-test_*.py files exist; an empty test tree is not evidence of runtime correctness.
+Restricted Windows sessions may need TMP and TEMP pointed at a writable local
+directory, for example artifacts/tmp, before running tests.

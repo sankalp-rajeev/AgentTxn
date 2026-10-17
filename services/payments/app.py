@@ -1,4 +1,7 @@
-"""Reserve the payments mock service API.
+"""Payment mock API; run with uvicorn services.payments.app:app."""
 
-Scaffold only; no FastAPI application or external effects are implemented.
-"""
+from agenttxn.effects.models import Operation
+from services.common import MockProvider, create_app
+
+provider = MockProvider(Operation.CHARGE)
+app = create_app(provider)

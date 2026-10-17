@@ -19,3 +19,7 @@ The feasibility implementation is authorized to collect this evidence. Do not
 advance to the full build or LLM integration unless the gate verdict supports it.
 Full-text SVBE comparison and deeper adjacent-system review remain open research
 tasks before a publication claim.
+
+Gate 1 update: REDESIGN. The feasibility experiment confirms the synthetic
+incident-budget key allows ordinary OCC to prevent the same budget race. The
+stronger reduction check fails. See [week-one evidence](../experiments/week1.md).

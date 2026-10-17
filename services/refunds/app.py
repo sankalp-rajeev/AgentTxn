@@ -1,4 +1,7 @@
-"""Reserve the refunds mock service API.
+"""Refund mock API for the cross-service incident compensation invariant."""
 
-Scaffold only; no FastAPI application or external effects are implemented.
-"""
+from agenttxn.effects.models import Operation
+from services.common import MockProvider, create_app
+
+provider = MockProvider(Operation.REFUND)
+app = create_app(provider)

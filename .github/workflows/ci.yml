@@ -32,7 +32,12 @@ jobs:
         run: uv run --no-sync mypy agenttxn txnagentbench baselines services experiments
       - name: Tests
         run: uv run --no-sync python -m pytest
-      # Add a deterministic benchmark smoke command when Gate 1 is implemented.
+      - name: Deterministic benchmark smoke
+        run: uv run --no-sync python -m experiments.week1_semantic_conflict --seed 42 --baseline all
+      - uses: actions/upload-artifact@v4
+        with:
+          name: week1-memory-${{ matrix.python-version }}
+          path: artifacts/week1/
       # Expensive LLM experiments must never run in CI.
 
   postgres-smoke:
@@ -48,14 +53,23 @@ jobs:
           uv sync --locked --extra dev
       - name: Validate Compose configuration
         run: docker compose config --quiet
-      - name: Start PostgreSQL
-        run: docker compose up -d --wait postgres
+      - name: Start PostgreSQL and mock APIs
+        run: docker compose up -d --build --wait
       - name: Check database readiness
         run: docker compose exec -T postgres pg_isready -U agenttxn -d agenttxn
       - name: PostgreSQL ledger integration
         env:
           AGENTTXN_TEST_DATABASE_URL: postgresql+asyncpg://agenttxn:agenttxn_dev@localhost:5432/agenttxn
-        run: uv run --no-sync python -m pytest tests/integration/test_postgres_ledger.py
+          AGENTTXN_TEST_TCP: "1"
+        run: uv run --no-sync python -m pytest tests/integration
+      - name: PostgreSQL benchmark smoke
+        env:
+          DATABASE_URL: postgresql+asyncpg://agenttxn:agenttxn_dev@localhost:5432/agenttxn
+        run: uv run --no-sync python -m experiments.week1_semantic_conflict --seed 42 --baseline all --ledger postgres
+      - uses: actions/upload-artifact@v4
+        with:
+          name: week1-postgres
+          path: artifacts/week1/
       - name: Stop services
         if: always()
         run: docker compose down

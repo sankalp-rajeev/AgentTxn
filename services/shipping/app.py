@@ -1,4 +1,7 @@
-"""Reserve the shipping mock service API.
+"""Shipping mock API; run with uvicorn services.shipping.app:app."""
 
-Scaffold only; no FastAPI application or external effects are implemented.
-"""
+from agenttxn.effects.models import Operation
+from services.common import MockProvider, create_app
+
+provider = MockProvider(Operation.SHIP)
+app = create_app(provider)

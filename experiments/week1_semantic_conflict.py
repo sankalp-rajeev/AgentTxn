@@ -1,9 +1,119 @@
-"""Reserve the week1 semantic conflict experiment entry point.
+"""Reproduce week-one ambiguity, disjoint-resource conflicts, and concurrency controls."""
 
-Scaffold only; no experiment has run and no results are available.
-"""
+import argparse
+import asyncio
+import hashlib
+import json
+import os
+import platform
+import shutil
+import subprocess
+from pathlib import Path
+
+from txnagentbench.commerce.week1 import scenarios
+from txnagentbench.runner import BASELINES, RunResult, run_scenario
+from txnagentbench.schema import Scenario
+
+
+async def run(args: argparse.Namespace) -> list[RunResult]:
+    selected = BASELINES if args.baseline == "all" else (args.baseline,)
+    definitions = scenarios(args.seed)
+    database_url = args.database_url or os.environ.get("DATABASE_URL")
+    if args.ledger == "postgres" and not database_url:
+        raise ValueError("--ledger postgres requires DATABASE_URL or --database-url")
+    results = []
+    for scenario in definitions:
+        print(f"Scenario: {scenario.scenario_id}", flush=True)
+        for baseline in selected:
+            result = await run_scenario(
+                scenario,
+                baseline,
+                args.seed,
+                args.output,
+                database_url if args.ledger == "postgres" else None,
+            )
+            results.append(result)
+            metrics = result.metrics
+            print(
+                f"  {baseline}: violations={metrics.invariant_violations} "
+                f"unsafe_downstream={metrics.unsafe_downstream_actions} "
+                f"effects={metrics.committed_external_effects} "
+                f"max_in_flight={metrics.max_provider_calls_in_flight} "
+                f"success={metrics.task_success}",
+                flush=True,
+            )
+    await asyncio.to_thread(write_manifest, args, definitions, results)
+    print(f"Evidence: {args.output / 'summary.json'}", flush=True)
+    return results
+
+
+def write_manifest(
+    args: argparse.Namespace, definitions: list[Scenario], results: list[RunResult]
+) -> None:
+    root = Path(__file__).resolve().parents[1]
+    source_commit = os.environ.get("AGENTTXN_SOURCE_COMMIT", "unavailable")
+    source_dirty: bool | None = None
+    if shutil.which("git"):
+        command = ["git", "-c", f"safe.directory={root.as_posix()}"]
+        revision = subprocess.run(
+            [*command, "rev-parse", "HEAD"],
+            cwd=root,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        source_commit = revision.stdout.strip() or source_commit
+        status = subprocess.run(
+            [*command, "status", "--porcelain"],
+            cwd=root,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        source_dirty = bool(status.stdout.strip()) if status.returncode == 0 else None
+    source_digest = hashlib.sha256()
+    for package in ("agenttxn", "services", "txnagentbench", "baselines", "experiments"):
+        for source in sorted((root / package).rglob("*")):
+            if source.suffix in {".py", ".sql"}:
+                source_digest.update(source.relative_to(root).as_posix().encode() + b"\0")
+                source_digest.update(source.read_bytes().replace(b"\r\n", b"\n") + b"\0")
+    manifest = {
+        "benchmark_version": "week1-v1",
+        "seed": args.seed,
+        "ledger": args.ledger,
+        "python": platform.python_version(),
+        "source_commit": source_commit,
+        "source_dirty": source_dirty,
+        "source_tree_sha256": source_digest.hexdigest(),
+        "determinism_scope": (
+            "Seeded inputs, faults, and admission order; "
+            "PostgreSQL completion events may interleave"
+        ),
+        "lockfile_sha256": (
+            hashlib.sha256((root / "uv.lock").read_bytes()).hexdigest()
+            if (root / "uv.lock").exists()
+            else "unavailable"
+        ),
+        "scenarios": [scenario.model_dump(mode="json") for scenario in definitions],
+        "results": [result.model_dump(mode="json") for result in results],
+    }
+    (args.output / "summary.json").write_text(
+        json.dumps(manifest, indent=2) + "\n", encoding="utf-8"
+    )
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument("--baseline", choices=("all", *BASELINES), default="all")
+    parser.add_argument("--ledger", choices=("memory", "postgres"), default="memory")
+    parser.add_argument(
+        "--database-url", help="PostgreSQL URL; prefer DATABASE_URL for local secrets"
+    )
+    parser.add_argument("--output", type=Path, default=Path("artifacts/week1"))
+    args = parser.parse_args()
+    asyncio.run(run(args))
+
 
 if __name__ == "__main__":
-    raise SystemExit(
-        "Not implemented: complete the PRD feasibility gates before running this experiment."
-    )
+    main()

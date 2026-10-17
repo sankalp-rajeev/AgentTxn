@@ -1,12 +1,18 @@
 # Mock external services
 
-Provider simulations own external truth independently of runtime observations.
-Start with Payments and Shipping for the feasibility spike. Refunds and customer
-credit support the required disjoint-resource compensation-budget example.
+Payments, Shipping, Refunds, and Customer Credit expose FastAPI applications at
+`services.<package>.app:app`. They implement POST /effects, GET
+/operations/{logical_operation_id}, and GET /health.
 
-Service app.py modules are placeholders, not running FastAPI applications.
-Add explicit contracts, reconciliation probes, fault hooks, and health checks
-when implementing each provider. Compose currently starts only PostgreSQL.
+Providers retain their own in-memory receipts and committed-effect journals.
+Stable keys deduplicate identical requests and reject changed arguments.
+The benchmark injects faults through provider construction, not public request
+headers. Timeout-before-effect and timeout-after-effect return the same 504 body.
 
-Identity, Documents, Email, Ticketing, Approvals, and Audit cover the second
-domain. CloudOps is optional. Keep fault schedules seeded and replayable.
+Compose exposes standalone APIs on localhost ports 18001-18004. Benchmark
+conditions use fresh in-process HTTP instances to reset truth and inject the
+same deterministic schedules. TCP smoke tests independently exercise Compose.
+
+The mocks have no delayed in-flight writes and receipt reads are strongly
+consistent. A missing receipt is definitive only under those assumptions.
+Provider state is lost on restart. Other service directories are placeholders.
